@@ -7,7 +7,6 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -113,10 +112,7 @@ class PosSystemTest extends TestCase
             'sku' => 'SKU-UNIQUE-01',
             'name' => 'Produk Duplikat',
             'unit' => 'pcs',
-            'purchase_price' => 1000,
             'selling_price' => 2000,
-            'stock' => 10,
-            'minimum_stock' => 2,
         ]);
 
         $response->assertSessionHasErrors('sku');
@@ -134,7 +130,6 @@ class PosSystemTest extends TestCase
             'sku' => 'AQUA-600',
             'name' => 'Aqua 600ml Segar',
             'selling_price' => 3500,
-            'stock' => 25,
             'is_active' => true,
         ]);
 
@@ -159,29 +154,27 @@ class PosSystemTest extends TestCase
     }
 
     /**
-     * Skenario 7: Kuantitas melebihi stok -> Ditolak saat checkout dan stok tidak berkurang.
+     * Skenario 7: Pesanan menu diproses tanpa pembatasan stok karena fitur stok telah ditiadakan.
      */
-    public function test_skenario_7_quantity_exceeding_stock_is_rejected(): void
+    public function test_skenario_7_order_without_stock_restriction(): void
     {
         $this->actingAs($this->cashier);
 
         $product = Product::factory()->create([
-            'stock' => 5,
             'selling_price' => 10000,
             'is_active' => true,
         ]);
 
         $response = $this->postJson('/pos/checkout', [
             'items' => [
-                ['id' => $product->id, 'quantity' => 10], // Meminta 10 padahal cuma ada 5
+                ['id' => $product->id, 'quantity' => 10],
             ],
             'payment_method' => 'cash',
             'amount_tendered' => 100000,
         ]);
 
-        $response->assertStatus(422);
-        $this->assertStringContainsString('tidak mencukupi', $response->json('message'));
-        $this->assertEquals(5, $product->fresh()->stock);
+        $response->assertOk();
+        $this->assertEquals(1, Sale::count());
     }
 
     /**
@@ -192,7 +185,6 @@ class PosSystemTest extends TestCase
         $this->actingAs($this->cashier);
 
         $product = Product::factory()->create([
-            'stock' => 10,
             'selling_price' => 50000,
             'is_active' => true,
         ]);
@@ -207,7 +199,6 @@ class PosSystemTest extends TestCase
 
         $response->assertStatus(422);
         $this->assertStringContainsString('kurang', $response->json('message'));
-        $this->assertEquals(10, $product->fresh()->stock);
         $this->assertEquals(0, Sale::count());
     }
 
@@ -219,7 +210,6 @@ class PosSystemTest extends TestCase
         $this->actingAs($this->cashier);
 
         $product = Product::factory()->create([
-            'stock' => 10,
             'selling_price' => 35000,
             'is_active' => true,
         ]);
@@ -243,7 +233,7 @@ class PosSystemTest extends TestCase
     }
 
     /**
-     * Skenario 10: Transaksi berhasil -> Penjualan, detail snapshot, pembayaran, dan pergerakan stok tersimpan.
+     * Skenario 10: Transaksi berhasil -> Penjualan, detail snapshot, dan pembayaran tersimpan.
      */
     public function test_skenario_10_successful_transaction_stores_all_audit_records(): void
     {
@@ -252,9 +242,7 @@ class PosSystemTest extends TestCase
         $product = Product::factory()->create([
             'sku' => 'SNACK-01',
             'name' => 'Keripik Singkong Renyah',
-            'purchase_price' => 6000,
             'selling_price' => 10000,
-            'stock' => 20,
             'is_active' => true,
         ]);
 
@@ -282,30 +270,16 @@ class PosSystemTest extends TestCase
         $this->assertEquals('SNACK-01', $item->sku_snapshot);
         $this->assertEquals(3, $item->quantity);
         $this->assertEquals(10000, (float) $item->unit_price);
-        $this->assertEquals(6000, (float) $item->unit_purchase_price);
-
-        // 3. Verifikasi pengurangan stok
-        $this->assertEquals(17, $product->fresh()->stock);
-
-        // 4. Verifikasi StockMovement log
-        $movement = StockMovement::where('product_id', $product->id)
-            ->where('movement_type', 'sale_out')
-            ->first();
-        $this->assertNotNull($movement);
-        $this->assertEquals(-3, $movement->quantity_change);
-        $this->assertEquals(20, $movement->stock_before);
-        $this->assertEquals(17, $movement->stock_after);
     }
 
     /**
-     * Skenario 11: Penyimpanan transaksi gagal (roll back) -> Perubahan dibatalkan dan stok tidak berkurang.
+     * Skenario 11: Penyimpanan transaksi gagal (roll back) -> Perubahan dibatalkan.
      */
     public function test_skenario_11_transaction_rollback_prevents_partial_stock_deduction(): void
     {
         $this->actingAs($this->cashier);
 
         $product = Product::factory()->create([
-            'stock' => 10,
             'selling_price' => 15000,
             'is_active' => true,
         ]);
@@ -321,8 +295,6 @@ class PosSystemTest extends TestCase
         ]);
 
         $response->assertStatus(422);
-        // Stok produk awal tetap 10, tidak pernah berkurang menjadi 8
-        $this->assertEquals(10, $product->fresh()->stock);
         $this->assertEquals(0, Sale::count());
     }
 
@@ -334,7 +306,6 @@ class PosSystemTest extends TestCase
         $this->actingAs($this->cashier);
 
         $product = Product::factory()->create([
-            'stock' => 50,
             'selling_price' => 5000,
             'is_active' => true,
         ]);
@@ -357,7 +328,6 @@ class PosSystemTest extends TestCase
         $sale2 = Sale::find($res2->json('sale_id'));
 
         $this->assertNotEquals($sale1->transaction_number, $sale2->transaction_number);
-        $this->assertEquals(48, $product->fresh()->stock);
     }
 
     /**
@@ -371,7 +341,6 @@ class PosSystemTest extends TestCase
             'sku' => 'TEH-BOTOL',
             'name' => 'Teh Botol Melati 350ml',
             'selling_price' => 4000,
-            'stock' => 30,
             'is_active' => true,
         ]);
 
@@ -389,9 +358,7 @@ class PosSystemTest extends TestCase
             'sku' => 'TEH-BOTOL',
             'name' => 'Teh Botol Melati 350ml Super',
             'unit' => 'botol',
-            'purchase_price' => 3000,
             'selling_price' => 6000, // Harga naik
-            'minimum_stock' => 5,
         ]);
 
         $this->assertEquals(6000, (float) $product->fresh()->selling_price);
@@ -441,30 +408,16 @@ class PosSystemTest extends TestCase
     }
 
     /**
-     * Skenario 15: Barang mencapai stok minimum -> Barang ditandai sebagai stok menipis.
+     * Skenario 15: Barang tersimpan dan aktif tanpa batasan stok.
      */
-    public function test_skenario_15_product_marked_as_low_stock(): void
+    public function test_skenario_15_products_are_active_without_stock(): void
     {
-        $productLow = Product::factory()->create([
-            'stock' => 3,
-            'minimum_stock' => 5,
+        $product = Product::factory()->create([
+            'name' => 'Kopi Tubruk',
             'is_active' => true,
         ]);
 
-        $productSafe = Product::factory()->create([
-            'stock' => 20,
-            'minimum_stock' => 5,
-            'is_active' => true,
-        ]);
-
-        $this->assertTrue($productLow->isLowStock());
-        $this->assertFalse($productSafe->isLowStock());
-
-        $this->actingAs($this->admin);
-        $response = $this->get('/admin/stock?filter=low_stock');
-        $response->assertOk()
-            ->assertSee($productLow->name)
-            ->assertDontSee($productSafe->name);
+        $this->assertTrue($product->is_active);
     }
 
     /**
@@ -495,11 +448,9 @@ class PosSystemTest extends TestCase
     {
         $owner = User::factory()->owner()->create(['is_active' => true]);
 
-        // Buat produk dengan stok dan harga tertentu
+        // Buat produk dengan harga tertentu
         $product = Product::factory()->create([
-            'purchase_price' => 10000,
             'selling_price' => 15000,
-            'stock' => 10,
             'is_active' => true,
         ]);
 
@@ -517,7 +468,6 @@ class PosSystemTest extends TestCase
             'sku_snapshot' => $product->sku,
             'quantity' => 2,
             'unit_price' => 15000,
-            'unit_purchase_price' => 10000,
             'line_total' => 30000,
         ]);
 
@@ -531,14 +481,12 @@ class PosSystemTest extends TestCase
         $response = $this->get(route('owner.dashboard', ['period' => 'all']));
 
         $response->assertOk()
-            ->assertSee('Omzet (Penjualan)')
+            ->assertSee('Omzet Penjualan')
             ->assertSee('30.000') // Omzet
-            ->assertSee('HPP (Modal Barang)')
-            ->assertSee('20.000') // HPP: 2 * 10000
-            ->assertSee('Laba Kotor (Margin)')
-            ->assertSee('10.000') // Laba: 30000 - 20000
-            ->assertSee('Nilai Aset Stok')
-            ->assertSee('100.000'); // Nilai aset: 10 * 10000
+            ->assertSee('Transaksi Selesai')
+            ->assertSee('Menu Terjual')
+            ->assertSee('Rata-rata Transaksi')
+            ->assertSee('30.000');
     }
 
     /**
@@ -616,7 +564,6 @@ class PosSystemTest extends TestCase
             'sku_snapshot' => $prodSold->sku,
             'quantity' => 1,
             'unit_price' => 10000,
-            'unit_purchase_price' => 8000,
             'line_total' => 10000,
         ]);
 
@@ -709,13 +656,12 @@ class PosSystemTest extends TestCase
      */
     public function test_pos_product_catalog_uses_three_columns_and_enlarged_cards(): void
     {
-        $this->actingAs($this->cashier);
+        $this->actingAs($this->admin);
 
         Product::factory()->create([
             'name' => 'Kopi Arabika Spesial',
             'sku' => 'KOP-001',
             'selling_price' => 25000,
-            'stock' => 15,
             'category_id' => $this->category->id,
             'is_active' => true,
         ]);
@@ -731,5 +677,81 @@ class PosSystemTest extends TestCase
         $response->assertSee('Kopi Arabika Spesial');
         $response->assertSee('KOP-001');
         $response->assertSee('Rp 25.000');
+    }
+
+    /**
+     * Uji Login Redirect: Setiap role (admin, cashier, owner, kitchen) diarahkan ke dashboard masing-masing tanpa 403.
+     */
+    public function test_roles_redirect_to_appropriate_dashboards_on_login_without_403(): void
+    {
+        $kitchen = User::factory()->create([
+            'role' => 'kitchen',
+            'is_active' => true,
+        ]);
+
+        $owner = User::factory()->create([
+            'role' => 'owner',
+            'is_active' => true,
+        ]);
+
+        // 1. Kasir Login -> diarahkan ke cashier.dashboard
+        $cashierLogin = $this->post(route('login.post'), [
+            'email' => $this->cashier->email,
+            'password' => 'password',
+        ]);
+        $cashierLogin->assertRedirect(route('cashier.dashboard'));
+        $this->actingAs($this->cashier);
+        $this->get(route('cashier.dashboard'))->assertOk();
+
+        $this->post(route('logout'));
+        $this->flushSession();
+
+        // 2. Kitchen Login -> diarahkan ke kitchen.index
+        $kitchenLogin = $this->post(route('login.post'), [
+            'email' => $kitchen->email,
+            'password' => 'password',
+        ]);
+        $kitchenLogin->assertRedirect(route('kitchen.index'));
+        $this->actingAs($kitchen);
+        $this->get(route('kitchen.index'))->assertOk();
+
+        $this->post(route('logout'));
+        $this->flushSession();
+
+        // 3. Owner Login -> diarahkan ke owner.dashboard
+        $ownerLogin = $this->post(route('login.post'), [
+            'email' => $owner->email,
+            'password' => 'password',
+        ]);
+        $ownerLogin->assertRedirect(route('owner.dashboard'));
+        $this->actingAs($owner);
+        $this->get(route('owner.dashboard'))->assertOk();
+
+        $this->post(route('logout'));
+        $this->flushSession();
+
+        // 4. Admin Login -> diarahkan ke admin.dashboard
+        $adminLogin = $this->post(route('login.post'), [
+            'email' => $this->admin->email,
+            'password' => 'password',
+        ]);
+        $adminLogin->assertRedirect(route('admin.dashboard'));
+        $this->actingAs($this->admin);
+        $this->get(route('admin.dashboard'))->assertOk();
+    }
+
+    /**
+     * Uji Role Owner: Mengakses cashier/dashboard diarahkan ke owner/dashboard tanpa 403.
+     */
+    public function test_owner_accessing_cashier_dashboard_is_redirected_to_owner_dashboard(): void
+    {
+        $owner = User::factory()->create([
+            'role' => 'owner',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($owner);
+        $response = $this->get(route('cashier.dashboard'));
+        $response->assertRedirect(route('owner.dashboard'));
     }
 }

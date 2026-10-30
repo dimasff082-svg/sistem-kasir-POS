@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
@@ -37,27 +36,19 @@ class DashboardController extends Controller
         // 1. Omzet (Total Revenue)
         $omzet = (clone $salesQuery)->sum('total_amount');
 
-        // 2. HPP (Harga Pokok Penjualan)
-        $hpp = (clone $itemsQuery)->sum(DB::raw('unit_purchase_price * quantity'));
-
-        // 3. Laba Kotor (Gross Profit = Omzet - HPP)
-        $labaKotor = $omzet - $hpp;
-
-        // 4. Nilai Aset Stok (Total Value of Current Inventory at purchase cost)
-        $nilaiAsetStok = Product::where('is_active', true)->sum(DB::raw('purchase_price * stock'));
-
-        // Additional Contextual Analytics for Owner
-        $potensiNilaiJualStok = Product::where('is_active', true)->sum(DB::raw('selling_price * stock'));
+        // 2. Total Struk & Menu Terjual
         $totalStruk = (clone $salesQuery)->count();
         $totalItemsSold = (clone $itemsQuery)->sum('quantity');
 
+        // 3. Rata-rata Nilai Transaksi (AOV)
+        $rataRataTransaksi = $totalStruk > 0 ? round($omzet / $totalStruk) : 0;
+
         // All-Time Totals for high-level comparison
         $omzetAllTime = Sale::where('status', 'completed')->sum('total_amount');
-        $hppAllTime = SaleItem::whereHas('sale', fn ($q) => $q->where('status', 'completed'))->sum(DB::raw('unit_purchase_price * quantity'));
-        $labaKotorAllTime = $omzetAllTime - $hppAllTime;
+        $totalStrukAllTime = Sale::where('status', 'completed')->count();
 
         // Recent completed transactions
-        $recentSales = Sale::with(['user', 'payment'])
+        $recentSales = Sale::with(['user', 'confirmer', 'payment'])
             ->where('status', 'completed')
             ->latest('transaction_date')
             ->take(5)
@@ -69,8 +60,7 @@ class DashboardController extends Controller
                 'product_name_snapshot',
                 'sku_snapshot',
                 DB::raw('SUM(quantity) as total_qty'),
-                DB::raw('SUM(line_total) as total_revenue'),
-                DB::raw('SUM(line_total - (unit_purchase_price * quantity)) as total_profit')
+                DB::raw('SUM(line_total) as total_revenue')
             )
             ->groupBy('product_name_snapshot', 'sku_snapshot')
             ->orderByDesc('total_revenue')
@@ -80,15 +70,11 @@ class DashboardController extends Controller
         return view('owner.dashboard', compact(
             'period',
             'omzet',
-            'hpp',
-            'labaKotor',
-            'nilaiAsetStok',
-            'potensiNilaiJualStok',
             'totalStruk',
             'totalItemsSold',
+            'rataRataTransaksi',
             'omzetAllTime',
-            'hppAllTime',
-            'labaKotorAllTime',
+            'totalStrukAllTime',
             'recentSales',
             'topProducts'
         ));

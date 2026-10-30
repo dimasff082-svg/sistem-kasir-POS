@@ -23,7 +23,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', 'in:admin,cashier,owner'],
+            'role' => ['required', 'string', 'in:admin,cashier,owner,kitchen'],
             'password' => ['required', 'string', 'min:6'],
         ], [
             'name.required' => 'Nama pengguna wajib diisi.',
@@ -48,7 +48,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
-            'role' => ['required', 'in:admin,cashier,owner'],
+            'role' => ['required', 'string', 'in:admin,cashier,owner,kitchen'],
             'password' => ['nullable', 'string', 'min:6'],
         ], [
             'name.required' => 'Nama pengguna wajib diisi.',

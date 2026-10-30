@@ -4,8 +4,8 @@
 <div class="max-w-3xl mx-auto space-y-6">
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-black text-slate-800 tracking-tight">Tambah Barang Baru</h2>
-            <p class="text-sm text-slate-500 mt-0.5">Daftarkan produk baru untuk mulai dijual pada kasir.</p>
+            <h2 class="text-2xl font-serif-classic font-bold text-[#262017] tracking-tight">Tambah Menu Baru</h2>
+            <p class="text-xs text-[#736858] mt-0.5">Daftarkan menu makanan atau minuman baru untuk mulai dipesan pelanggan.</p>
         </div>
         <a href="{{ route('admin.products.index') }}" class="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-3.5 py-2 rounded-xl transition">
             &larr; Kembali
@@ -13,20 +13,23 @@
     </div>
 
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-8">
-        <form action="{{ route('admin.products.store') }}" method="POST" class="space-y-6">
+        <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
 
+            <!-- 1. Kode Menu & 2. Kategori Menu -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Kode Barang / SKU *</label>
-                    <input type="text" name="sku" value="{{ old('sku') }}" required placeholder="Contoh: BRG-001"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm uppercase font-mono font-bold focus:ring-2 focus:ring-indigo-500">
-                    <p class="text-[11px] text-slate-400 mt-1">Harus unik, digunakan kasir untuk pencarian cepat.</p>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Kode Menu *</label>
+                    <input type="text" name="sku" value="{{ old('sku') }}" required placeholder="Contoh: MKN-001 / MNM-001"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm uppercase font-mono font-bold focus:ring-2 focus:ring-[#c59b27] focus:outline-none">
+                    @error('sku')
+                        <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Kategori Barang</label>
-                    <select name="category_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Kategori Menu</label>
+                    <select name="category_id" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#c59b27] focus:outline-none">
                         <option value="">-- Tanpa Kategori --</option>
                         @foreach($categories as $cat)
                             <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
@@ -34,64 +37,80 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('category_id')
+                        <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Nama Barang *</label>
-                    <input type="text" name="name" value="{{ old('name') }}" required placeholder="Contoh: Sabun Cuci Piring 750ml"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Satuan *</label>
-                    <input type="text" name="unit" value="{{ old('unit', 'pcs') }}" required placeholder="pcs / botol / kg"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
-                </div>
-            </div>
-
+            <!-- 3. Nama Menu & 4. Harga Menu -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2 border-t border-slate-100">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Harga Beli / Pokok (Rp) *</label>
-                    <input type="number" name="purchase_price" value="{{ old('purchase_price', 0) }}" min="0" step="100" required
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500">
-                    <p class="text-[11px] text-slate-400 mt-1">Digunakan untuk menghitung estimasi laba kotor di laporan.</p>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Nama Menu *</label>
+                    <input type="text" name="name" value="{{ old('name') }}" required placeholder="Contoh: Nasi Goreng Spesial / Kopi Latte"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#c59b27] focus:outline-none">
+                    @error('name')
+                        <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Harga Jual Satuan (Rp) *</label>
-                    <input type="number" name="selling_price" value="{{ old('selling_price', 0) }}" min="0" step="100" required
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500">
-                    <p class="text-[11px] text-slate-400 mt-1">Harga resmi yang akan ditagihkan kepada pembeli.</p>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Harga Menu (Rp) *</label>
+                    <input type="number" name="selling_price" value="{{ old('selling_price') }}" min="0" step="500" required placeholder="Contoh: 25000"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-[#c59b27] focus:outline-none">
+                    @error('selling_price')
+                        <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2 border-t border-slate-100">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Stok Awal Tersedia *</label>
-                    <input type="number" name="stock" value="{{ old('stock', 0) }}" min="0" required
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500">
-                    <p class="text-[11px] text-slate-400 mt-1">Akan otomatis dicatat sebagai riwayat pergerakan stok awal.</p>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Ambang Stok Minimum (Peringatan)</label>
-                    <input type="number" name="minimum_stock" value="{{ old('minimum_stock', 5) }}" min="0" required
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
-                    <p class="text-[11px] text-slate-400 mt-1">Sistem akan memberi tahu jika stok mencapai angka ini.</p>
+            <!-- 5. Foto Menu -->
+            <div class="pt-2 border-t border-slate-100 space-y-3">
+                <label class="block text-xs font-bold text-slate-700">Foto Menu</label>
+                <div class="flex items-center gap-5">
+                    <div id="image-preview-wrapper" class="w-24 h-24 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden shrink-0">
+                        <svg id="image-placeholder-icon" class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <img id="image-preview" src="#" alt="Preview" class="hidden w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1">
+                        <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/jpg,image/webp"
+                            onchange="previewMenuImage(this)"
+                            class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#f6f2e9] file:text-[#362f25] hover:file:bg-[#ece4d3] file:cursor-pointer cursor-pointer border border-slate-200 rounded-xl p-1 bg-slate-50">
+                        <p class="text-[11px] text-slate-400 mt-1.5">Format JPG, PNG, atau WEBP. Maksimal 2MB. Foto akan ditampilkan pada layar pemesanan pelanggan.</p>
+                        @error('image')
+                            <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+            <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
                 <a href="{{ route('admin.products.index') }}" class="px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">
                     Batal
                 </a>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-6 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 transition transform active:scale-95">
-                    Simpan Produk
+                <button type="submit" class="bg-[#c59b27] hover:bg-[#a98119] text-stone-950 font-bold text-xs px-6 py-2.5 rounded-xl shadow-md transition transform active:scale-95">
+                    Simpan Menu Baru
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    function previewMenuImage(input) {
+        const preview = document.getElementById('image-preview');
+        const icon = document.getElementById('image-placeholder-icon');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                icon.classList.add('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
 @endsection

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 #[Fillable(['name', 'email', 'password', 'role', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
@@ -40,6 +41,50 @@ class User extends Authenticatable
         return $this->hasMany(Sale::class);
     }
 
+    /**
+     * Dapatkan kasir yang sedang aktif login (berdasarkan sesi aktif di database),
+     * atau fallback ke kasir aktif pertama di sistem jika belum ada sesi.
+     */
+    public static function getActiveCashier(): ?self
+    {
+        // 1. Jika dalam konteks request yang sedang dijalankan oleh kasir
+        if (auth()->check() && auth()->user() && auth()->user()->isCashier()) {
+            return auth()->user();
+        }
+
+        // 2. Cek sesi kasir yang paling baru aktif di tabel database sessions
+        try {
+            $cashierId = DB::table('sessions')
+                ->join('users', 'sessions.user_id', '=', 'users.id')
+                ->where('users.role', 'cashier')
+                ->where('users.is_active', true)
+                ->whereNotNull('sessions.user_id')
+                ->orderByDesc('sessions.last_activity')
+                ->value('users.id');
+
+            if ($cashierId) {
+                $cashier = self::find($cashierId);
+                if ($cashier) {
+                    return $cashier;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Abaikan jika tabel sessions tidak ada / koneksi db testing berbeda
+        }
+
+        // 3. Fallback: kasir aktif pertama di sistem (atau admin aktif jika belum ada kasir)
+        return self::where('role', 'cashier')->where('is_active', true)->first()
+            ?? self::where('role', 'admin')->where('is_active', true)->first();
+    }
+
+    /**
+     * Dapatkan ID kasir yang sedang aktif login.
+     */
+    public static function getActiveCashierId(): ?int
+    {
+        return static::getActiveCashier()?->id;
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -53,5 +98,21 @@ class User extends Authenticatable
     public function isOwner(): bool
     {
         return $this->role === 'owner';
+    }
+
+    public function isKitchen(): bool
+    {
+        return $this->role === 'kitchen';
+    }
+
+    public function roleLabel(): string
+    {
+        return match ($this->role) {
+            'admin' => 'ADMINISTRATOR',
+            'owner' => 'PEMILIK TOKO',
+            'cashier' => 'KASIR',
+            'kitchen' => 'DAPUR',
+            default => strtoupper((string) $this->role),
+        };
     }
 }

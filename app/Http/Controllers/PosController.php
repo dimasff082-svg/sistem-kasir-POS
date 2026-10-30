@@ -7,7 +7,6 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\StockMovement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -90,10 +89,6 @@ class PosController extends Controller
                         throw new \Exception("Barang '{$product->name}' sedang tidak aktif dan tidak dapat dijual.");
                     }
 
-                    if ($product->stock < $qty) {
-                        throw new \Exception("Stok untuk '{$product->name}' tidak mencukupi. Tersedia: {$product->stock}, diminta: {$qty}.");
-                    }
-
                     $lineTotal = $qty * (float) $product->selling_price;
                     $subtotal += $lineTotal;
 
@@ -101,7 +96,6 @@ class PosController extends Controller
                         'product' => $product,
                         'quantity' => $qty,
                         'unit_price' => (float) $product->selling_price,
-                        'unit_purchase_price' => (float) $product->purchase_price,
                         'line_total' => $lineTotal,
                     ];
                 }
@@ -151,28 +145,8 @@ class PosController extends Controller
                         'sku_snapshot' => $prod->sku,
                         'quantity' => $qty,
                         'unit_price' => $pItem['unit_price'],
-                        'unit_purchase_price' => $pItem['unit_purchase_price'],
                         'discount_amount' => 0,
                         'line_total' => $pItem['line_total'],
-                    ]);
-
-                    $stockBefore = $prod->stock;
-                    $stockAfter = $stockBefore - $qty;
-
-                    // Kurangi stok produk
-                    $prod->update(['stock' => $stockAfter]);
-
-                    // Catat mutasi stok
-                    StockMovement::create([
-                        'product_id' => $prod->id,
-                        'user_id' => $request->user()->id,
-                        'movement_type' => 'sale_out',
-                        'quantity_change' => -$qty,
-                        'stock_before' => $stockBefore,
-                        'stock_after' => $stockAfter,
-                        'reference_type' => Sale::class,
-                        'reference_id' => $sale->id,
-                        'reason' => "Penjualan transaksi {$sale->transaction_number}",
                     ]);
                 }
 
@@ -215,7 +189,7 @@ class PosController extends Controller
 
     public function receipt(Sale $sale): View
     {
-        $sale->load(['items.product', 'payment', 'user']);
+        $sale->load(['items.product', 'payment', 'user', 'confirmer', 'openBill.sales.items.product', 'openBill.sales.payment']);
 
         return view('pos.receipt', compact('sale'));
     }

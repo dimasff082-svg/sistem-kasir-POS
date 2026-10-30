@@ -4,21 +4,15 @@
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-serif-classic font-bold text-[#262017] tracking-tight">Data Barang (Produk)</h2>
-            <p class="text-sm text-[#736858] mt-0.5">Kelola katalog barang toko, harga beli, harga jual, dan stok persediaan.</p>
+            <h2 class="text-2xl font-serif-classic font-bold text-[#262017] tracking-tight">Data Menu Cafe & Resto</h2>
+            <p class="text-sm text-[#736858] mt-0.5">Kelola katalog menu makanan & minuman, kategori, foto, dan harga menu.</p>
         </div>
         <div class="flex items-center gap-3">
-            <a href="{{ route('admin.stock.index') }}" class="inline-flex items-center gap-2 bg-[#ffffff] hover:bg-[#f6f2e9] border border-[#dcd4c5] text-[#362f25] text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition">
-                <svg class="w-4 h-4 text-[#8a681c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                Kelola Stok
-            </a>
             <a href="{{ route('admin.products.create') }}" class="inline-flex items-center gap-2 bg-[#c59b27] hover:bg-[#a98119] text-stone-950 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm shadow-amber-950/20 transition transform active:scale-95">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Tambah Barang Baru
+                Tambah Menu Baru
             </a>
         </div>
     </div>
@@ -33,7 +27,7 @@
                     </svg>
                 </div>
                 <input type="text" name="search" value="{{ request('search') }}"
-                    placeholder="Cari nama barang atau kode SKU..."
+                    placeholder="Cari nama menu atau kode menu..."
                     class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
 
@@ -69,18 +63,17 @@
         </form>
     </div>
 
-    <!-- Products Table -->
+    <!-- Menu Table -->
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead>
                     <tr class="bg-slate-50/75 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                        <th class="py-3.5 px-6">SKU / Kode</th>
-                        <th class="py-3.5 px-6">Nama Barang</th>
+                        <th class="py-3.5 px-6 text-center w-20">Foto</th>
+                        <th class="py-3.5 px-6">Kode Menu</th>
+                        <th class="py-3.5 px-6">Nama Menu</th>
                         <th class="py-3.5 px-6">Kategori</th>
-                        <th class="py-3.5 px-6 text-right">Harga Beli</th>
-                        <th class="py-3.5 px-6 text-right">Harga Jual</th>
-                        <th class="py-3.5 px-6 text-center">Stok Saat Ini</th>
+                        <th class="py-3.5 px-6 text-right">Harga</th>
                         <th class="py-3.5 px-6 text-center">Status</th>
                         <th class="py-3.5 px-6 text-right">Aksi</th>
                     </tr>
@@ -88,38 +81,31 @@
                 <tbody class="divide-y divide-slate-100 font-medium">
                     @forelse($products as $product)
                         <tr class="hover:bg-slate-50/60 transition">
+                            <td class="py-3 px-6 text-center">
+                                @if($product->image_url)
+                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
+                                        class="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-2xs mx-auto">
+                                @else
+                                    <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-700 flex items-center justify-center mx-auto shadow-2xs">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                        </svg>
+                                    </div>
+                                @endif
+                            </td>
                             <td class="py-4 px-6 font-mono text-xs font-bold text-slate-800">
                                 {{ $product->sku }}
                             </td>
                             <td class="py-4 px-6 text-slate-900 font-bold">
                                 {{ $product->name }}
-                                <span class="text-xs text-slate-400 font-normal">/ {{ $product->unit }}</span>
                             </td>
                             <td class="py-4 px-6 text-xs text-slate-600">
                                 <span class="inline-flex px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700">
                                     {{ $product->category->name ?? 'Tanpa Kategori' }}
                                 </span>
                             </td>
-                            <td class="py-4 px-6 text-right text-xs text-slate-500">
-                                Rp {{ number_format($product->purchase_price, 0, ',', '.') }}
-                            </td>
                             <td class="py-4 px-6 text-right text-xs font-bold text-slate-900">
                                 Rp {{ number_format($product->selling_price, 0, ',', '.') }}
-                            </td>
-                            <td class="py-4 px-6 text-center">
-                                @if($product->stock <= 0)
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
-                                        Habis (0)
-                                    </span>
-                                @elseif($product->isLowStock())
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                                        Menipis ({{ $product->stock }})
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
-                                        {{ $product->stock }} {{ $product->unit }}
-                                    </span>
-                                @endif
                             </td>
                             <td class="py-4 px-6 text-center">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold {{ $product->is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200' }}">
@@ -129,18 +115,9 @@
                             </td>
                             <td class="py-4 px-6 text-right whitespace-nowrap">
                                 <div class="inline-flex items-center gap-1.5 justify-end">
-                                    <!-- Stock Adjust Icon Button -->
-                                    <a href="{{ route('admin.stock.adjust', $product->id) }}"
-                                        title="Sesuaikan Stok Fisik"
-                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-800 hover:bg-[#2d6a4f] hover:text-white border border-emerald-300 transition shadow-2xs">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                        </svg>
-                                    </a>
-
                                     <!-- Edit Icon Button -->
                                     <a href="{{ route('admin.products.edit', $product->id) }}"
-                                        title="Ubah Data Barang"
+                                        title="Ubah Data Menu"
                                         class="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-amber-50 text-amber-800 hover:bg-[#c59b27] hover:text-stone-950 border border-amber-300/80 transition shadow-2xs">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -152,7 +129,7 @@
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit"
-                                            title="{{ $product->is_active ? 'Nonaktifkan Barang' : 'Aktifkan Barang' }}"
+                                            title="{{ $product->is_active ? 'Nonaktifkan Menu' : 'Aktifkan Menu' }}"
                                             class="w-8 h-8 inline-flex items-center justify-center rounded-lg {{ $product->is_active ? 'bg-stone-100 text-stone-700 hover:bg-stone-300 border border-stone-300' : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-600 hover:text-white border border-emerald-300' }} transition shadow-2xs">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -162,11 +139,11 @@
 
                                     <!-- Delete Icon Button -->
                                     <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" class="inline"
-                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus barang \'{{ addslashes($product->name) }}\'?')">
+                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus menu \'{{ addslashes($product->name) }}\'?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                            title="Hapus Barang"
+                                            title="Hapus Menu"
                                             class="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-700 hover:text-white border border-rose-300/80 transition shadow-2xs">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -178,8 +155,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="py-10 text-center text-slate-400 text-sm">
-                                Tidak ada data barang yang sesuai kriteria pencarian.
+                            <td colspan="7" class="py-10 text-center text-slate-400 text-sm">
+                                Tidak ada data menu yang sesuai kriteria pencarian.
                             </td>
                         </tr>
                     @endforelse

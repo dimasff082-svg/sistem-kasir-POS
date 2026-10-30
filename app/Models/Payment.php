@@ -48,6 +48,7 @@ class Payment extends Model
             'cash' => 'Tunai (Cash)',
             'transfer' => 'Transfer Bank',
             'qris' => 'QRIS',
+            'midtrans' => 'Midtrans (Online)',
             default => strtoupper($this->method),
         };
     }

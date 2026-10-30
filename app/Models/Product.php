@@ -16,33 +16,41 @@ class Product extends Model
         'category_id',
         'sku',
         'name',
+        'image',
         'unit',
-        'purchase_price',
         'selling_price',
-        'stock',
-        'minimum_stock',
         'is_active',
     ];
 
     protected function casts(): array
     {
         return [
-            'purchase_price' => 'decimal:2',
             'selling_price' => 'decimal:2',
-            'stock' => 'integer',
-            'minimum_stock' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function getPriceAttribute(): float
+    {
+        return (float) $this->selling_price;
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (! $this->image) {
+            return null;
+        }
+
+        if (str_starts_with($this->image, 'http://') || str_starts_with($this->image, 'https://')) {
+            return $this->image;
+        }
+
+        return asset('storage/'.$this->image);
     }
 
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
-    }
-
-    public function stockMovements(): HasMany
-    {
-        return $this->hasMany(StockMovement::class);
     }
 
     public function saleItems(): HasMany
@@ -53,15 +61,5 @@ class Product extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
-    }
-
-    public function isLowStock(): bool
-    {
-        return $this->stock <= $this->minimum_stock;
-    }
-
-    public function isOutOfStock(): bool
-    {
-        return $this->stock <= 0;
     }
 }

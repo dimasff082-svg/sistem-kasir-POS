@@ -4,8 +4,8 @@
 <div class="space-y-8">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#e5dfd3] pb-3">
         <div>
-            <h2 class="text-2xl font-serif-classic font-bold text-[#262017] tracking-tight">Laporan Penjualan & Margin</h2>
-            <p class="text-xs text-[#736858] mt-0.5">Analisis pendapatan omzet, harga pokok penjualan (HPP), dan laba kotor toko.</p>
+            <h2 class="text-2xl font-serif-classic font-bold text-[#262017] tracking-tight">Laporan Penjualan & Transaksi</h2>
+            <p class="text-xs text-[#736858] mt-0.5">Analisis pendapatan omzet, volume menu terjual, dan rata-rata nilai transaksi cafe & resto.</p>
         </div>
         <a href="{{ route('owner.reports.export_excel', ['start_date' => $startDate, 'end_date' => $endDate]) }}"
             class="inline-flex items-center gap-2 bg-[#1b4332] hover:bg-[#2d6a4f] text-emerald-100 border border-emerald-500/30 text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition hover:scale-102 active:scale-98">
@@ -90,31 +90,31 @@
         </div>
 
         <div class="bg-white rounded-2xl p-6 border border-[#e5dfd3] shadow-xs">
-            <span class="text-xs font-bold text-[#8a7f70] uppercase tracking-wider block mb-2">Total HPP (Modal Barang)</span>
-            <div class="text-2xl font-serif-classic font-bold text-[#8b1e22] tracking-tight">
-                Rp {{ number_format($totalHpp, 0, ',', '.') }}
-            </div>
-            <p class="text-[11px] text-[#786e60] mt-1">Biaya pokok barang terjual</p>
-        </div>
-
-        <div class="bg-white rounded-2xl p-6 border border-[#e5dfd3] shadow-xs">
-            <span class="text-xs font-bold text-[#8a7f70] uppercase tracking-wider block mb-2">Estimasi Laba Kotor</span>
+            <span class="text-xs font-bold text-[#8a7f70] uppercase tracking-wider block mb-2">Total Transaksi Selesai</span>
             <div class="text-2xl font-serif-classic font-bold text-[#1b4332] tracking-tight">
-                Rp {{ number_format($totalGrossProfit, 0, ',', '.') }}
+                {{ number_format($totalTransactions) }} <span class="text-sm font-normal text-[#8a7f70]">struk</span>
             </div>
-            <p class="text-[11px] text-[#1b4332] font-semibold mt-1">Margin {{ $totalRevenue > 0 ? number_format(($totalGrossProfit / $totalRevenue) * 100, 1) : 0 }}%</p>
+            <p class="text-[11px] text-[#786e60] mt-1">Pesanan lunas & selesai</p>
         </div>
 
         <div class="bg-white rounded-2xl p-6 border border-[#e5dfd3] shadow-xs">
-            <span class="text-xs font-bold text-[#8a7f70] uppercase tracking-wider block mb-2">Total Kuantitas Terjual</span>
+            <span class="text-xs font-bold text-[#8a7f70] uppercase tracking-wider block mb-2">Total Menu Terjual</span>
             <div class="text-2xl font-serif-classic font-bold text-[#362f25] tracking-tight">
-                {{ number_format($totalItemsSold) }} <span class="text-sm font-normal text-[#8a7f70]">unit</span>
+                {{ number_format($totalItemsSold) }} <span class="text-sm font-normal text-[#8a7f70]">porsi/item</span>
             </div>
-            <p class="text-[11px] text-[#786e60] mt-1">Total produk keluar</p>
+            <p class="text-[11px] text-[#786e60] mt-1">Volume makanan & minuman</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-[#e5dfd3] shadow-xs">
+            <span class="text-xs font-bold text-[#8a7f70] uppercase tracking-wider block mb-2">Rata-rata Transaksi</span>
+            <div class="text-2xl font-serif-classic font-bold text-[#1d3557] tracking-tight">
+                Rp {{ number_format($averageTransaction, 0, ',', '.') }}
+            </div>
+            <p class="text-[11px] text-[#786e60] mt-1">Rata-rata belanja / pesanan</p>
         </div>
     </div>
 
-    <!-- Payment Breakdown & Top Products -->
+    <!-- Payment Breakdown & Top Menu -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded-2xl border border-[#e5dfd3] shadow-xs p-6 space-y-4">
             <h3 class="font-serif-classic font-bold text-base text-[#262017] border-b border-[#f0ebd9] pb-3">
@@ -139,16 +139,15 @@
 
         <div class="lg:col-span-2 bg-white rounded-2xl border border-[#e5dfd3] shadow-xs p-6 space-y-4">
             <h3 class="font-serif-classic font-bold text-base text-[#262017] border-b border-[#f0ebd9] pb-3">
-                10 Produk Paling Laris
+                10 Menu Paling Laris
             </h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="border-b border-[#f0ebd9] text-[#8a7f70] font-bold uppercase tracking-wider">
-                            <th class="py-2.5 px-3">Produk</th>
-                            <th class="py-2.5 px-3 text-center">Terjual</th>
-                            <th class="py-2.5 px-3 text-right">Total Nilai</th>
-                            <th class="py-2.5 px-3 text-right">Laba Kotor</th>
+                            <th class="py-2.5 px-3">Menu</th>
+                            <th class="py-2.5 px-3 text-center">Porsi Terjual</th>
+                            <th class="py-2.5 px-3 text-right">Total Nilai Penjualan</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#f7f4ed]">
@@ -164,14 +163,11 @@
                                 <td class="py-3 px-3 text-right font-medium text-[#262017]">
                                     Rp {{ number_format($item->total_revenue, 0, ',', '.') }}
                                 </td>
-                                <td class="py-3 px-3 text-right font-bold text-[#1b4332]">
-                                    +Rp {{ number_format($item->total_profit, 0, ',', '.') }}
-                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 text-center text-xs text-[#998f80]">
-                                    Belum ada produk terjual.
+                                <td colspan="3" class="py-8 text-center text-xs text-[#998f80]">
+                                    Belum ada menu terjual.
                                 </td>
                             </tr>
                         @endforelse

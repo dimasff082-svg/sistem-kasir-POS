@@ -4,15 +4,19 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
-use App\Http\Controllers\Admin\StockController as AdminStockController;
+use App\Http\Controllers\Admin\RestaurantTableController as AdminRestaurantTableController;
 use App\Http\Controllers\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Cashier\DashboardController as CashierDashboardController;
+use App\Http\Controllers\Cashier\OpenBillController as CashierOpenBillController;
 use App\Http\Controllers\Cashier\TransactionController as CashierTransactionController;
+use App\Http\Controllers\CustomerOrderController;
+use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\Owner\DashboardController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\PosController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to login or appropriate dashboard
@@ -23,6 +27,9 @@ Route::get('/', function () {
         }
         if (auth()->user()->isOwner()) {
             return redirect()->route('owner.dashboard');
+        }
+        if (auth()->user()->isKitchen()) {
+            return redirect()->route('kitchen.index');
         }
 
         return redirect()->route('cashier.dashboard');
@@ -39,19 +46,58 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
-// Shared POS Routes (Cashier & Admin)
+// Customer Self-Order via Table QR Code (Public / Guest)
+Route::prefix('order')->name('order.')->group(function () {
+    Route::get('/{table_number}', [CustomerOrderController::class, 'index'])->name('index');
+    Route::post('/{table_number}/checkout', [CustomerOrderController::class, 'checkout'])->name('checkout');
+    Route::post('/{table_number}/request-open-bill', [CustomerOrderController::class, 'requestOpenBill'])->name('request_open_bill');
+    Route::post('/{table_number}/cancel-open-bill-request', [CustomerOrderController::class, 'cancelOpenBillRequest'])->name('cancel_open_bill_request');
+    Route::post('/{table_number}/open-bill/snap-token', [CustomerOrderController::class, 'getOpenBillSnapToken'])->name('open_bill_snap_token');
+    Route::post('/{table_number}/open-bill/midtrans-success', [CustomerOrderController::class, 'markOpenBillMidtransSuccess'])->name('open_bill_midtrans_success');
+    Route::get('/{table_number}/status/{sale}', [CustomerOrderController::class, 'status'])->name('status');
+    Route::post('/{table_number}/status/{sale}/midtrans-success', [CustomerOrderController::class, 'markMidtransSuccess'])->name('midtrans_success');
+    Route::post('/{table_number}/status/{sale}/snap-token', [CustomerOrderController::class, 'getSnapToken'])->name('snap_token');
+});
+Route::post('/api/midtrans/notification', [CustomerOrderController::class, 'midtransNotification'])->name('midtrans.notification');
+Route::get('/meja/{table_number}', fn ($table_number) => redirect()->route('order.index', $table_number));
+
+// Cashier & Terminal Routes (Customer Order Management & Payment Confirmation)
+Route::middleware(['auth', 'role:cashier,admin,owner'])->prefix('cashier')->name('cashier.')->group(function () {
+    Route::get('/dashboard', [CashierDashboardController::class, 'index'])->name('dashboard');
+    Route::post('/orders/{sale}/confirm-payment', [CashierDashboardController::class, 'confirmPayment'])->name('orders.confirm_payment');
+
+    // Open Bill Management (Khusus Pengelolaan Tagihan Meja)
+    Route::get('/open-bills', [CashierOpenBillController::class, 'index'])->name('open_bills.index');
+    Route::post('/open-bills', [CashierOpenBillController::class, 'store'])->name('open_bills.store');
+    Route::post('/open-bills/{openBill}/approve', [CashierOpenBillController::class, 'approve'])->name('open_bills.approve');
+    Route::post('/open-bills/{openBill}/reject', [CashierOpenBillController::class, 'reject'])->name('open_bills.reject');
+    Route::get('/open-bills/{openBill}', [CashierOpenBillController::class, 'show'])->name('open_bills.show');
+    Route::post('/open-bills/{openBill}/confirm-payment', [CashierOpenBillController::class, 'confirmPayment'])->name('open_bills.confirm_payment');
+
+    Route::get('/transactions', [CashierTransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/{sale}', [CashierTransactionController::class, 'show'])->name('transactions.show');
+});
+
+// Kitchen Display System Routes (Dapur - Kelola Status Pesanan: Menunggu -> Diproses -> Selesai)
+Route::middleware(['auth', 'role:kitchen,admin'])->prefix('kitchen')->name('kitchen.')->group(function () {
+    Route::get('/', [KitchenController::class, 'index'])->name('index');
+    Route::patch('/orders/{sale}/status', [KitchenController::class, 'updateStatus'])->name('orders.status');
+});
+
+// POS Routes (Kasir diarahkan ke Dashboard Kasir)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+    Route::get('/pos', function (Request $request) {
+        if ($request->user()->isCashier()) {
+            return redirect()->route('cashier.dashboard')
+                ->with('info', 'Tugas Kasir telah disederhanakan: pelanggan memesan mandiri via QR Code meja, Kasir bertugas mengonfirmasi pembayaran.');
+        }
+
+        return app(PosController::class)->index($request);
+    })->name('pos.index');
+
     Route::get('/pos/search', [PosController::class, 'search'])->name('pos.search');
     Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
     Route::get('/pos/receipt/{sale}', [PosController::class, 'receipt'])->name('pos.receipt');
-});
-
-// Cashier Routes
-Route::middleware(['auth', 'role:cashier,admin'])->prefix('cashier')->name('cashier.')->group(function () {
-    Route::get('/dashboard', [CashierDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/transactions', [CashierTransactionController::class, 'index'])->name('transactions.index');
-    Route::get('/transactions/{sale}', [CashierTransactionController::class, 'show'])->name('transactions.show');
 });
 
 // Admin Routes (Strict Admin Only)
@@ -74,12 +120,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/products/{product}/toggle', [AdminProductController::class, 'toggleStatus'])->name('products.toggle');
     Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
 
-    // Stock Management & Movements
-    Route::get('/stock', [AdminStockController::class, 'index'])->name('stock.index');
-    Route::get('/stock/{product}/adjust', [AdminStockController::class, 'adjustmentForm'])->name('stock.adjust');
-    Route::post('/stock/{product}/adjust', [AdminStockController::class, 'adjust'])->name('stock.adjust.post');
-    Route::get('/stock/movements', [AdminStockController::class, 'movements'])->name('stock.movements');
-
     // Transactions History & Inspection
     Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{sale}', [AdminTransactionController::class, 'show'])->name('transactions.show');
@@ -94,11 +134,20 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
     Route::patch('/users/{user}/toggle', [AdminUserController::class, 'toggleStatus'])->name('users.toggle');
+
+    // Restaurant Tables Management & QR Code Print
+    Route::get('/tables', [AdminRestaurantTableController::class, 'index'])->name('tables.index');
+    Route::post('/tables', [AdminRestaurantTableController::class, 'store'])->name('tables.store');
+    Route::put('/tables/{table}', [AdminRestaurantTableController::class, 'update'])->name('tables.update');
+    Route::delete('/tables/{table}', [AdminRestaurantTableController::class, 'destroy'])->name('tables.destroy');
+    Route::get('/tables/{table}/print-qr', [AdminRestaurantTableController::class, 'printQr'])->name('tables.print_qr');
 });
 
 // Owner Routes (Role Pemilik)
 Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/transactions', [AdminTransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/{sale}', [AdminTransactionController::class, 'show'])->name('transactions.show');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.export_excel');
     Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.export_csv');

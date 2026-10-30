@@ -6,7 +6,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
         <div>
             <h2 class="text-2xl font-serif-classic font-bold text-[#262017] tracking-tight">Ringkasan Aktivitas Toko</h2>
-            <p class="text-sm text-[#736858] mt-1">Pantau penjualan harian, perputaran stok, dan performa kasir secara terpusat.</p>
+            <p class="text-sm text-[#736858] mt-1">Pantau penjualan harian, status meja restoran, dan performa kasir secara terpusat.</p>
         </div>
         <div class="flex items-center gap-3">
             <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center gap-2 bg-[#ffffff] hover:bg-[#f5f1e8] border border-[#dcd4c5] text-[#362f25] text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition">
@@ -57,10 +57,10 @@
             </div>
         </div>
 
-        <!-- Barang Aktif -->
+        <!-- Menu Aktif -->
         <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between mb-4">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Barang Aktif</span>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Menu Aktif</span>
                 <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -68,95 +68,74 @@
                 </div>
             </div>
             <div class="text-2xl font-black text-slate-900 tracking-tight">
-                {{ number_format($activeProductsCount) }} <span class="text-sm font-normal text-slate-400">produk</span>
+                {{ number_format($activeProductsCount) }} <span class="text-sm font-normal text-slate-400">menu</span>
             </div>
             <div class="text-xs text-slate-500 mt-2">
-                Siap dijual di sistem kasir
+                Siap dipesan di cafe & resto
             </div>
         </div>
 
-        <!-- Stok Menipis -->
+        <!-- Meja Restoran -->
         <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition">
             <div class="flex items-center justify-between mb-4">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Stok Menipis</span>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Meja Restoran</span>
                 <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                 </div>
             </div>
-            <div class="text-2xl font-black {{ $lowStockCount > 0 ? 'text-rose-600' : 'text-slate-900' }} tracking-tight">
-                {{ number_format($lowStockCount) }} <span class="text-sm font-normal text-slate-400">item</span>
+            <div class="text-2xl font-black text-slate-900 tracking-tight">
+                {{ $occupiedTablesCount }} <span class="text-sm font-normal text-slate-400">/ {{ $tablesCount }} terisi</span>
             </div>
             <div class="text-xs text-slate-500 mt-2">
-                Di bawah ambang batas minimum
+                {{ $tablesCount - $occupiedTablesCount }} meja tersedia untuk pelanggan
             </div>
         </div>
     </div>
 
-    <!-- Section 2: Low Stock Alert & Top Selling Products -->
+    <!-- Section 2: Table Status & Top Selling Products -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Produk Stok Menipis -->
+        <!-- Status Meja Restoran -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 flex flex-col">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                    <h3 class="font-bold text-base text-slate-800">Perhatian: Stok Menipis</h3>
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <h3 class="font-bold text-base text-slate-800">Status Meja Restoran</h3>
                 </div>
-                <a href="{{ route('admin.stock.index', ['filter' => 'low_stock']) }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-                    Kelola Stok &rarr;
+                <a href="{{ route('admin.tables.index') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                    Kelola Meja &rarr;
                 </a>
             </div>
 
-            @if($lowStockProducts->isEmpty())
+            @if($restaurantTables->isEmpty())
                 <div class="p-8 text-center text-slate-400 my-auto">
-                    <svg class="w-10 h-10 mx-auto mb-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p class="text-sm font-medium text-slate-600">Semua stok barang dalam kondisi aman!</p>
+                    <p class="text-sm font-medium text-slate-600">Belum ada data meja restoran yang terdaftar.</p>
                 </div>
             @else
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-100 text-slate-400 uppercase tracking-wider font-semibold">
-                                <th class="pb-2">Barang</th>
-                                <th class="pb-2">SKU</th>
-                                <th class="pb-2 text-right">Sisa Stok</th>
-                                <th class="pb-2 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 font-medium">
-                            @foreach($lowStockProducts as $p)
-                                <tr class="hover:bg-slate-50 transition">
-                                    <td class="py-3 text-slate-800 font-semibold">{{ $p->name }}</td>
-                                    <td class="py-3 text-slate-500 font-mono text-[11px]">{{ $p->sku }}</td>
-                                    <td class="py-3 text-right">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold {{ $p->stock <= 0 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800' }}">
-                                            {{ $p->stock }} {{ $p->unit }}
-                                        </span>
-                                    </td>
-                                    <td class="py-3 text-right">
-                                        <a href="{{ route('admin.stock.adjust', $p->id) }}" class="text-xs font-semibold text-indigo-600 hover:underline">
-                                            Sesuaikan
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 my-auto">
+                    @foreach($restaurantTables as $tbl)
+                        <div class="p-3 rounded-xl border {{ $tbl->status === 'occupied' ? 'border-amber-300 bg-amber-50/50' : 'border-slate-200 bg-slate-50/50' }} text-center">
+                            <span class="text-xs font-mono font-bold text-slate-700 block">{{ $tbl->table_number }}</span>
+                            <span class="text-xs font-bold {{ $tbl->status === 'occupied' ? 'text-amber-800' : 'text-slate-800' }} truncate block">{{ $tbl->name }}</span>
+                            <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold {{ $tbl->status === 'occupied' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $tbl->status === 'occupied' ? 'bg-amber-500' : 'bg-emerald-500' }}"></span>
+                                {{ $tbl->status === 'occupied' ? 'Terisi' : 'Tersedia' }}
+                            </span>
+                        </div>
+                    @endforeach
                 </div>
             @endif
         </div>
 
-        <!-- Produk Terlaris -->
+        <!-- Menu Terlaris -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 flex flex-col">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    <h3 class="font-bold text-base text-slate-800">Produk Paling Laris</h3>
+                    <h3 class="font-bold text-base text-slate-800">Menu Paling Laris</h3>
                 </div>
-                <span class="text-xs text-slate-400">Berdasarkan kuantitas terjual</span>
+                <span class="text-xs text-slate-400">Berdasarkan porsi terjual</span>
             </div>
 
             @if($topProducts->isEmpty())
@@ -168,7 +147,7 @@
                     <table class="w-full text-left text-xs">
                         <thead>
                             <tr class="border-b border-slate-100 text-slate-400 uppercase tracking-wider font-semibold">
-                                <th class="pb-2">Nama Produk</th>
+                                <th class="pb-2">Nama Menu</th>
                                 <th class="pb-2 text-right">Terjual</th>
                                 <th class="pb-2 text-right">Total Pendapatan</th>
                             </tr>
@@ -235,21 +214,28 @@
                                     {{ $sale->transaction_date->format('d/m/Y H:i') }}
                                 </td>
                                 <td class="py-3.5 text-xs text-slate-700 font-medium">
-                                    {{ $sale->user->name ?? 'Kasir' }}
+                                    {{ $sale->user->name ?? ($sale->customer_name ? $sale->customer_name . ' (' . ($sale->table_number ?? 'Meja') . ')' : 'Pelanggan') }}
                                 </td>
                                 <td class="py-3.5 text-xs">
-                                    <span class="inline-flex px-2 py-0.5 rounded-md font-medium text-[11px] bg-slate-100 text-slate-700">
-                                        {{ $sale->payment->methodLabel() ?? 'Tunai' }}
+                                    <span class="inline-flex px-2 py-0.5 rounded-md font-medium text-[11px] {{ $sale->isPaid() ? 'bg-slate-100 text-slate-700' : 'bg-amber-100 text-amber-800' }}">
+                                        {{ $sale->payment?->methodLabel() ?? ($sale->isPaid() ? 'Tunai' : 'Belum Bayar') }}
                                     </span>
                                 </td>
                                 <td class="py-3.5 text-right font-bold text-slate-900 text-xs">
                                     Rp {{ number_format($sale->total_amount, 0, ',', '.') }}
                                 </td>
                                 <td class="py-3.5 text-center">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                        Selesai
-                                    </span>
+                                    @if($sale->isCompleted())
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                            Selesai
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                                            {{ $sale->orderStatusLabel() }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="py-3.5 text-right">
                                     <a href="{{ route('pos.receipt', $sale->id) }}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold transition">

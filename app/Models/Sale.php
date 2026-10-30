@@ -14,12 +14,20 @@ class Sale extends Model
 
     protected $fillable = [
         'transaction_number',
+        'table_number',
+        'customer_name',
         'user_id',
         'transaction_date',
         'subtotal',
         'discount_amount',
         'total_amount',
         'status',
+        'order_status',
+        'payment_status',
+        'snap_token',
+        'open_bill_id',
+        'confirmed_by',
+        'confirmed_at',
         'notes',
     ];
 
@@ -27,6 +35,7 @@ class Sale extends Model
     {
         return [
             'transaction_date' => 'datetime',
+            'confirmed_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'discount_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
@@ -36,6 +45,21 @@ class Sale extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function confirmer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmed_by');
+    }
+
+    public function openBill(): BelongsTo
+    {
+        return $this->belongsTo(OpenBill::class);
+    }
+
+    public function restaurantTable(): BelongsTo
+    {
+        return $this->belongsTo(RestaurantTable::class, 'table_number', 'table_number');
     }
 
     public function items(): HasMany
@@ -56,5 +80,32 @@ class Sale extends Model
     public function isCompleted(): bool
     {
         return $this->status === 'completed';
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    public function isUnpaid(): bool
+    {
+        return $this->payment_status === 'unpaid';
+    }
+
+    public function orderStatusLabel(): string
+    {
+        return match ($this->order_status) {
+            'processing' => 'Diproses',
+            'completed' => 'Selesai',
+            default => 'Menunggu',
+        };
+    }
+
+    public function paymentStatusLabel(): string
+    {
+        return match ($this->payment_status) {
+            'paid' => 'Lunas',
+            default => 'Belum Dibayar',
+        };
     }
 }

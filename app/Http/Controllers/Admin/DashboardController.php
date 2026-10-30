@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\RestaurantTable;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Support\Facades\DB;
@@ -25,19 +26,17 @@ class DashboardController extends Controller
 
         $activeProductsCount = Product::active()->count();
 
-        $lowStockCount = Product::active()
-            ->whereColumn('stock', '<=', 'minimum_stock')
-            ->count();
+        $tablesCount = RestaurantTable::count();
+        $occupiedTablesCount = RestaurantTable::where('status', 'occupied')->count();
 
         $recentSales = Sale::with(['user', 'payment'])
             ->latest()
             ->limit(6)
             ->get();
 
-        $lowStockProducts = Product::active()
-            ->whereColumn('stock', '<=', 'minimum_stock')
-            ->orderBy('stock')
-            ->limit(5)
+        $restaurantTables = RestaurantTable::with('activeOpenBill')
+            ->orderBy('table_number')
+            ->limit(8)
             ->get();
 
         $topProducts = SaleItem::select(
@@ -56,9 +55,10 @@ class DashboardController extends Controller
             'salesToday',
             'trxTodayCount',
             'activeProductsCount',
-            'lowStockCount',
+            'tablesCount',
+            'occupiedTablesCount',
             'recentSales',
-            'lowStockProducts',
+            'restaurantTables',
             'topProducts'
         ));
     }

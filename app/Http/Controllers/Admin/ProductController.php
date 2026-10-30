@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -51,47 +50,35 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
             'name' => ['required', 'string', 'max:255'],
-            'unit' => ['required', 'string', 'max:50'],
-            'purchase_price' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0'],
-            'stock' => ['required', 'integer', 'min:0'],
-            'minimum_stock' => ['required', 'integer', 'min:0'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ], [
-            'sku.required' => 'Kode barang / SKU wajib diisi.',
-            'sku.unique' => 'Kode barang / SKU sudah terdaftar. Gunakan kode yang unik.',
-            'name.required' => 'Nama barang wajib diisi.',
-            'purchase_price.min' => 'Harga beli tidak boleh negatif.',
-            'selling_price.min' => 'Harga jual tidak boleh negatif.',
-            'stock.min' => 'Stok awal tidak boleh bernilai negatif.',
+            'sku.required' => 'Kode menu wajib diisi.',
+            'sku.unique' => 'Kode menu sudah terdaftar. Gunakan kode yang unik.',
+            'name.required' => 'Nama menu wajib diisi.',
+            'selling_price.required' => 'Harga menu wajib diisi.',
+            'selling_price.min' => 'Harga menu tidak boleh negatif.',
+            'image.image' => 'File foto menu harus berupa gambar.',
+            'image.mimes' => 'Format foto menu yang didukung adalah JPEG, PNG, JPG, dan WEBP.',
+            'image.max' => 'Ukuran foto menu maksimal adalah 2MB.',
         ]);
 
-        DB::transaction(function () use ($validated, $request) {
-            $product = Product::create([
-                'category_id' => $validated['category_id'] ?? null,
-                'sku' => strtoupper(trim($validated['sku'])),
-                'name' => $validated['name'],
-                'unit' => $validated['unit'],
-                'purchase_price' => $validated['purchase_price'],
-                'selling_price' => $validated['selling_price'],
-                'stock' => $validated['stock'],
-                'minimum_stock' => $validated['minimum_stock'],
-                'is_active' => true,
-            ]);
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+        }
 
-            if ($product->stock > 0) {
-                StockMovement::create([
-                    'product_id' => $product->id,
-                    'user_id' => $request->user()->id,
-                    'movement_type' => 'initial',
-                    'quantity_change' => $product->stock,
-                    'stock_before' => 0,
-                    'stock_after' => $product->stock,
-                    'reason' => 'Stok awal saat barang didaftarkan',
-                ]);
-            }
-        });
+        Product::create([
+            'category_id' => $validated['category_id'] ?? null,
+            'sku' => strtoupper(trim($validated['sku'])),
+            'name' => $validated['name'],
+            'unit' => 'porsi',
+            'selling_price' => $validated['selling_price'],
+            'image' => $imagePath,
+            'is_active' => true,
+        ]);
 
-        return redirect()->route('admin.products.index')->with('success', 'Barang baru berhasil ditambahkan.');
+        return redirect()->route('admin.products.index')->with('success', 'Menu baru berhasil ditambahkan.');
     }
 
     public function edit(Product $product): View
@@ -107,29 +94,36 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'sku' => ['required', 'string', 'max:100', 'unique:products,sku,'.$product->id],
             'name' => ['required', 'string', 'max:255'],
-            'unit' => ['required', 'string', 'max:50'],
-            'purchase_price' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0'],
-            'minimum_stock' => ['required', 'integer', 'min:0'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ], [
-            'sku.required' => 'Kode barang / SKU wajib diisi.',
-            'sku.unique' => 'Kode barang / SKU sudah terdaftar.',
-            'name.required' => 'Nama barang wajib diisi.',
-            'purchase_price.min' => 'Harga beli tidak boleh bernilai negatif.',
-            'selling_price.min' => 'Harga jual tidak boleh bernilai negatif.',
+            'sku.required' => 'Kode menu wajib diisi.',
+            'sku.unique' => 'Kode menu sudah terdaftar.',
+            'name.required' => 'Nama menu wajib diisi.',
+            'selling_price.required' => 'Harga menu wajib diisi.',
+            'selling_price.min' => 'Harga menu tidak boleh bernilai negatif.',
+            'image.image' => 'File foto menu harus berupa gambar.',
+            'image.mimes' => 'Format foto menu yang didukung adalah JPEG, PNG, JPG, dan WEBP.',
+            'image.max' => 'Ukuran foto menu maksimal adalah 2MB.',
         ]);
 
-        $product->update([
+        $data = [
             'category_id' => $validated['category_id'] ?? null,
             'sku' => strtoupper(trim($validated['sku'])),
             'name' => $validated['name'],
-            'unit' => $validated['unit'],
-            'purchase_price' => $validated['purchase_price'],
             'selling_price' => $validated['selling_price'],
-            'minimum_stock' => $validated['minimum_stock'],
-        ]);
+        ];
 
-        return redirect()->route('admin.products.index')->with('success', 'Informasi barang berhasil diperbarui.');
+        if ($request->hasFile('image')) {
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $data['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        $product->update($data);
+
+        return redirect()->route('admin.products.index')->with('success', 'Informasi menu berhasil diperbarui.');
     }
 
     public function toggleStatus(Product $product): RedirectResponse
@@ -138,7 +132,7 @@ class ProductController extends Controller
 
         $status = $product->is_active ? 'diaktifkan' : 'dinonaktifkan';
 
-        return redirect()->route('admin.products.index')->with('success', "Barang {$product->name} berhasil {$status}.");
+        return redirect()->route('admin.products.index')->with('success', "Menu {$product->name} berhasil {$status}.");
     }
 
     public function destroy(Product $product): RedirectResponse
@@ -146,14 +140,15 @@ class ProductController extends Controller
         $salesCount = $product->saleItems()->count();
 
         if ($salesCount > 0) {
-            return redirect()->route('admin.products.index')->with('error', "Barang '{$product->name}' tidak dapat dihapus karena memiliki riwayat {$salesCount} transaksi penjualan. Anda dapat menonaktifkan status barang agar tidak muncul di kasir.");
+            return redirect()->route('admin.products.index')->with('error', "Menu '{$product->name}' tidak dapat dihapus karena memiliki riwayat {$salesCount} transaksi pesanan. Anda dapat menonaktifkan status menu agar tidak tampil di daftar pemesanan.");
         }
 
-        DB::transaction(function () use ($product) {
-            $product->stockMovements()->delete();
-            $product->delete();
-        });
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
+        }
 
-        return redirect()->route('admin.products.index')->with('success', "Barang '{$product->name}' berhasil dihapus.");
+        $product->delete();
+
+        return redirect()->route('admin.products.index')->with('success', "Menu '{$product->name}' berhasil dihapus.");
     }
 }

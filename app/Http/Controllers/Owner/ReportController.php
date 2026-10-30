@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class ReportController extends Controller
 {
@@ -29,8 +30,9 @@ class ReportController extends Controller
 
         $totalRevenue = (clone $salesQuery)->sum('total_amount');
         $totalTransactions = (clone $salesQuery)->count();
+        $averageTransaction = $totalTransactions > 0 ? round($totalRevenue / $totalTransactions) : 0;
 
-        // Items sold, HPP, and estimated gross profit
+        // Items sold in period
         $itemsQuery = SaleItem::whereHas('sale', function ($q) use ($startDate, $endDate) {
             $q->where('status', 'completed')
                 ->whereDate('transaction_date', '>=', $startDate)
@@ -38,8 +40,6 @@ class ReportController extends Controller
         });
 
         $totalItemsSold = (clone $itemsQuery)->sum('quantity');
-        $totalHpp = (clone $itemsQuery)->sum(DB::raw('unit_purchase_price * quantity'));
-        $totalGrossProfit = $totalRevenue - $totalHpp;
 
         // Breakdown per payment method
         $paymentBreakdown = Payment::select('method', DB::raw('COUNT(*) as total_count'), DB::raw('SUM(amount_paid) as total_amount'))
@@ -56,8 +56,7 @@ class ReportController extends Controller
             'product_name_snapshot',
             'sku_snapshot',
             DB::raw('SUM(quantity) as total_qty'),
-            DB::raw('SUM(line_total) as total_revenue'),
-            DB::raw('SUM(line_total - (unit_purchase_price * quantity)) as total_profit')
+            DB::raw('SUM(line_total) as total_revenue')
         )
             ->whereHas('sale', function ($q) use ($startDate, $endDate) {
                 $q->where('status', 'completed')
@@ -80,8 +79,7 @@ class ReportController extends Controller
             'totalRevenue',
             'totalTransactions',
             'totalItemsSold',
-            'totalHpp',
-            'totalGrossProfit',
+            'averageTransaction',
             'paymentBreakdown',
             'topProducts',
             'startDate',
@@ -89,7 +87,7 @@ class ReportController extends Controller
         ));
     }
 
-    public function exportExcel(Request $request): BinaryFileResponse
+    public function exportExcel(Request $request): Response
     {
         $startDate = $request->filled('start_date') ? $request->input('start_date') : now()->startOfMonth()->toDateString();
         $endDate = $request->filled('end_date') ? $request->input('end_date') : now()->toDateString();
@@ -113,23 +111,19 @@ class ReportController extends Controller
             'Kasir Bertugas',
             'Metode Pembayaran',
             'Total Penjualan / Omzet (Rp)',
-            'HPP / Modal Barang (Rp)',
-            'Estimasi Laba Kotor (Rp)',
+            'Total Item Terjual',
             'Status Transaksi',
         ];
 
         $rows = [];
         $grandTotalSales = 0;
-        $grandTotalHpp = 0;
-        $grandTotalProfit = 0;
+        $grandTotalItems = 0;
 
         foreach ($sales as $sale) {
-            $saleHpp = (float) $sale->items->sum(fn ($i) => $i->unit_purchase_price * $i->quantity);
-            $saleProfit = (float) ($sale->total_amount - $saleHpp);
+            $itemCount = (int) $sale->items->sum('quantity');
 
             $grandTotalSales += (float) $sale->total_amount;
-            $grandTotalHpp += $saleHpp;
-            $grandTotalProfit += $saleProfit;
+            $grandTotalItems += $itemCount;
 
             $rows[] = [
                 $sale->transaction_number,
@@ -137,8 +131,7 @@ class ReportController extends Controller
                 $sale->user->name ?? '-',
                 strtoupper($sale->payment->method ?? 'TUNAI'),
                 (float) $sale->total_amount,
-                $saleHpp,
-                $saleProfit,
+                $itemCount,
                 ucfirst($sale->status),
             ];
         }
@@ -149,8 +142,7 @@ class ReportController extends Controller
             '',
             '',
             $grandTotalSales,
-            $grandTotalHpp,
-            $grandTotalProfit,
+            $grandTotalItems,
             count($sales).' transaksi berhasil',
         ];
 

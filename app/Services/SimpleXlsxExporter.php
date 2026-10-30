@@ -4,7 +4,7 @@ namespace App\Services;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 use ZipArchive;
 
 class SimpleXlsxExporter
@@ -24,7 +24,7 @@ class SimpleXlsxExporter
         array $headers,
         array $rows,
         ?array $summaryRow = null
-    ): BinaryFileResponse {
+    ): Response {
         $cleanTitle = substr(preg_replace('/[\\\\\/*\?:\[\]]/', '', $sheetTitle), 0, 31) ?: 'Laporan';
 
         $tempDir = sys_get_temp_dir().'/xlsx_'.uniqid('pos_', true);
@@ -221,16 +221,16 @@ class SimpleXlsxExporter
         // Clean up temporary XML directory
         self::deleteDir($tempDir);
 
-        return response()->download(
-            $zipFilePath,
-            $filename,
-            [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Cache-Control' => 'max-age=0, no-cache, no-store, must-revalidate',
-                'Pragma' => 'no-cache',
-                'Expires' => '0',
-            ]
-        )->deleteFileAfterSend(true);
+        $content = file_get_contents($zipFilePath);
+        @unlink($zipFilePath);
+
+        return response($content, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Cache-Control' => 'max-age=0, no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
     /**

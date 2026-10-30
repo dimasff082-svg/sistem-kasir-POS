@@ -12,9 +12,17 @@ class AuthController extends Controller
     public function showLoginForm(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return Auth::user()->role === 'admin'
-                ? redirect()->route('admin.dashboard')
-                : redirect()->route('cashier.dashboard');
+            if (Auth::user()->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
+            if (Auth::user()->isOwner()) {
+                return redirect()->route('owner.dashboard');
+            }
+            if (Auth::user()->isKitchen()) {
+                return redirect()->route('kitchen.index');
+            }
+
+            return redirect()->route('cashier.dashboard');
         }
 
         return view('auth.login');
@@ -46,16 +54,21 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $request->session()->forget('url.intended');
 
-        if ($user->role === 'admin') {
-            return redirect()->intended(route('admin.dashboard'));
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
         }
 
-        if ($user->role === 'owner') {
-            return redirect()->intended(route('owner.dashboard'));
+        if ($user->isOwner()) {
+            return redirect()->route('owner.dashboard');
         }
 
-        return redirect()->intended(route('cashier.dashboard'));
+        if ($user->isKitchen()) {
+            return redirect()->route('kitchen.index');
+        }
+
+        return redirect()->route('cashier.dashboard');
     }
 
     public function logout(Request $request): RedirectResponse

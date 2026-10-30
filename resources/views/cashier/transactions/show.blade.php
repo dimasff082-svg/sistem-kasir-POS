@@ -40,7 +40,7 @@
             </div>
             <div class="flex justify-between">
                 <span class="text-slate-400">Kasir</span>
-                <span class="text-slate-700 font-semibold">{{ $sale->user->name ?? 'Kasir' }}</span>
+                <span class="text-slate-700 font-semibold">{{ $sale->user->name ?? $sale->confirmer?->name ?? 'Kasir Resto' }}</span>
             </div>
         </div>
 
@@ -77,7 +77,7 @@
             </div>
             <div class="flex justify-between text-slate-600 pt-2 border-t border-slate-100">
                 <span>Metode Bayar</span>
-                <span class="font-bold uppercase">{{ $sale->payment->methodLabel() ?? 'TUNAI' }}</span>
+                <span class="font-bold uppercase">{{ $sale->payment?->methodLabel() ?? 'TUNAI' }}</span>
             </div>
             <div class="flex justify-between text-slate-600">
                 <span>Uang Diterima</span>

@@ -4,42 +4,42 @@ namespace App\Http\Controllers\Cashier;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sale;
+use App\Services\TransactionHistoryService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TransactionController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, TransactionHistoryService $historyService): View
     {
-        $query = Sale::with(['payment', 'items'])
-            ->where('user_id', $request->user()->id)
-            ->latest();
-
-        if ($search = $request->input('search')) {
-            $query->where('transaction_number', 'like', "%{$search}%");
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('transaction_date', '>=', $request->input('date_from'));
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('transaction_date', '<=', $request->input('date_to'));
-        }
-
-        $sales = $query->paginate(15)->withQueryString();
+        $cashierId = $request->user()->isCashier() ? $request->user()->id : null;
+        $sales = $historyService->getTransactions($request, $cashierId);
 
         return view('cashier.transactions.index', compact('sales'));
     }
 
     public function show(Request $request, Sale $sale): View
     {
-        // Kasir hanya boleh membuka transaksi yang dilayaninya sendiri
-        if ($sale->user_id !== $request->user()->id && ! $request->user()->isAdmin()) {
+        // Kasir hanya boleh membuka transaksi yang dilayani atau dikonfirmasinya sendiri
+        if ($request->user()->isCashier()) {
+            $isServed = ($sale->user_id === $request->user()->id || $sale->confirmed_by === $request->user()->id);
+            if (! $isServed && $sale->open_bill_id) {
+                $sale->loadMissing('openBill.sales');
+                if ($sale->openBill) {
+                    $isServed = ($sale->openBill->opened_by === $request->user()->id
+                        || $sale->openBill->closed_by === $request->user()->id
+                        || $sale->openBill->sales->contains(fn ($s) => $s->user_id === $request->user()->id || $s->confirmed_by === $request->user()->id));
+                }
+            }
+
+            if (! $isServed) {
+                abort(403, 'Anda tidak memiliki hak untuk melihat transaksi ini karena dilayani oleh kasir lain.');
+            }
+        } elseif (! $request->user()->isAdmin() && ! $request->user()->isOwner()) {
             abort(403, 'Anda tidak memiliki hak untuk melihat transaksi ini.');
         }
 
-        $sale->load(['user', 'payment', 'items.product']);
+        $sale->load(['user', 'confirmer', 'payment', 'items.product', 'openBill.sales.items.product']);
 
         return view('cashier.transactions.show', compact('sale'));
     }

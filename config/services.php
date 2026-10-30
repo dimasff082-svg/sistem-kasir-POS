@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'midtrans' => [
+        'server_key' => env('MIDTRANS_SERVER_KEY', 'SB-Mid-server-kI._QxEwcrQvcmPBFzdy2zFA'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY', 'SB-Mid-client-cclA53nEGemMIzdKixoGyyx7'),
+        'is_production' => (bool) env('MIDTRANS_IS_PRODUCTION', false),
+        'snap_url' => env('MIDTRANS_IS_PRODUCTION', false)
+            ? 'https://app.midtrans.com/snap/snap.js'
+            : 'https://app.sandbox.midtrans.com/snap/snap.js',
+    ],
+
 ];

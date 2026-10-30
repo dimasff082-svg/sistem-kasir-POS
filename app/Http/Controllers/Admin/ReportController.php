@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class ReportController extends Controller
 {
@@ -29,8 +30,9 @@ class ReportController extends Controller
 
         $totalRevenue = (clone $salesQuery)->sum('total_amount');
         $totalTransactions = (clone $salesQuery)->count();
+        $averageTransaction = $totalTransactions > 0 ? round($totalRevenue / $totalTransactions) : 0;
 
-        // Items sold and estimated gross profit
+        // Total items sold
         $itemsQuery = SaleItem::whereHas('sale', function ($q) use ($startDate, $endDate) {
             $q->where('status', 'completed')
                 ->whereDate('transaction_date', '>=', $startDate)
@@ -38,7 +40,6 @@ class ReportController extends Controller
         });
 
         $totalItemsSold = (clone $itemsQuery)->sum('quantity');
-        $totalGrossProfit = (clone $itemsQuery)->selectRaw('SUM(line_total - (unit_purchase_price * quantity)) as profit')->value('profit') ?? 0;
 
         // Breakdown per payment method
         $paymentBreakdown = Payment::select('method', DB::raw('COUNT(*) as total_count'), DB::raw('SUM(amount_paid) as total_amount'))
@@ -86,14 +87,14 @@ class ReportController extends Controller
             'totalRevenue',
             'totalTransactions',
             'totalItemsSold',
-            'totalGrossProfit',
+            'averageTransaction',
             'paymentBreakdown',
             'topProducts',
             'dailySales'
         ));
     }
 
-    public function exportExcel(Request $request): BinaryFileResponse
+    public function exportExcel(Request $request): Response
     {
         $startDate = $request->filled('start_date') ? $request->input('start_date') : now()->startOfMonth()->toDateString();
         $endDate = $request->filled('end_date') ? $request->input('end_date') : now()->toDateString();

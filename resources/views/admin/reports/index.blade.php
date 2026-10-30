@@ -5,7 +5,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h2 class="text-2xl font-black text-slate-800 tracking-tight">Laporan & Analisis Penjualan</h2>
-            <p class="text-sm text-slate-500 mt-0.5">Pantau pendapatan omzet, estimasi laba kotor, dan performa produk toko.</p>
+            <p class="text-sm text-slate-500 mt-0.5">Pantau pendapatan omzet, rata-rata transaksi, dan performa menu resto.</p>
         </div>
         <a href="{{ route('admin.reports.export_excel', ['start_date' => $startDate, 'end_date' => $endDate]) }}"
             class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition hover:scale-102 active:scale-98">
@@ -90,11 +90,11 @@
         </div>
 
         <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Estimasi Laba Kotor</span>
-            <div class="text-2xl font-black text-emerald-600 tracking-tight">
-                Rp {{ number_format($totalGrossProfit, 0, ',', '.') }}
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Rata-rata Transaksi</span>
+            <div class="text-2xl font-black text-amber-700 tracking-tight">
+                Rp {{ number_format($averageTransaction, 0, ',', '.') }}
             </div>
-            <p class="text-xs text-slate-500 mt-1">Omzet dikurangi harga beli pokok</p>
+            <p class="text-xs text-slate-500 mt-1">Rata-rata nominal per struk</p>
         </div>
 
         <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">

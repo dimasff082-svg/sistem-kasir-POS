@@ -1,114 +1,600 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-5xl mx-auto space-y-8">
-    <!-- Welcome & Hero Action Banner -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 text-white p-8 sm:p-10 shadow-xl shadow-emerald-700/10">
+<div class="space-y-6">
+    <!-- Header & Hero Banner -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-600 via-amber-700 to-stone-900 text-white p-7 sm:p-9 shadow-xl shadow-amber-950/20">
         <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white backdrop-blur-md mb-3">
-                    <span class="w-2 h-2 rounded-full bg-emerald-300"></span>
-                    Terminal Kasir Aktif
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Terminal Kasir Cafe & Resto
                 </span>
-                <h2 class="text-3xl font-extrabold tracking-tight">Selamat Bertugas, {{ auth()->user()->name }}!</h2>
-                <p class="text-emerald-100 text-sm mt-1 max-w-lg">
-                    Siap melayani pembeli dengan cepat dan akurat. Gunakan kolom pencarian untuk menemukan barang tanpa scanner.
+                <h2 class="text-3xl font-extrabold tracking-tight">Daftar Pesanan Pelanggan</h2>
+                <p class="text-amber-100/90 text-sm mt-1 max-w-xl">
+                    Pelanggan memesan mandiri via QR Code meja. Tugas Kasir adalah memverifikasi dan mengonfirmasi pembayaran pesanan atau tagihan Open Bill.
                 </p>
             </div>
-            <div>
-                <a href="{{ route('pos.index') }}" class="inline-flex items-center gap-3 bg-white text-emerald-800 hover:bg-emerald-50 text-sm font-extrabold px-6 py-4 rounded-2xl shadow-lg transition transform hover:scale-105 active:scale-95">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="{{ route('cashier.open_bills.index') }}" class="inline-flex items-center gap-2 bg-white text-stone-900 hover:bg-amber-50 text-xs font-bold px-4 py-3 rounded-xl shadow-md transition transform hover:scale-105 active:scale-95">
+                    <svg class="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
-                    Mulai Transaksi Baru (POS)
+                    Kelola Open Bill Meja
+                    @if($activeOpenBillsCount > 0)
+                        <span class="bg-amber-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{{ $activeOpenBillsCount }}</span>
+                    @endif
                 </a>
             </div>
         </div>
         <!-- Decorative Glow -->
-        <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
     </div>
 
-    <!-- Today's Cashier Statistics -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Penjualan Anda Hari Ini</span>
-            <div class="text-3xl font-black text-slate-900 tracking-tight">
-                Rp {{ number_format($salesToday, 0, ',', '.') }}
-            </div>
-            <p class="text-xs text-slate-500 mt-2">Total nominal transaksi yang telah berhasil Anda selesaikan.</p>
+    <!-- Alert Notifikasi -->
+    @if(session('success'))
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl flex items-center gap-3 text-sm">
+            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ session('success') }}</span>
         </div>
-
-        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Jumlah Struk Selesai</span>
-            <div class="text-3xl font-black text-slate-900 tracking-tight">
-                {{ number_format($trxTodayCount) }} <span class="text-base font-normal text-slate-400">transaksi</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-2">Jumlah pelanggan yang telah Anda layani hari ini.</p>
+    @endif
+    @if(session('info'))
+        <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-2xl flex items-center gap-3 text-sm">
+            <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ session('info') }}</span>
         </div>
-    </div>
+    @endif
+    @if($errors->any())
+        <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-2xl text-sm">
+            <ul class="list-disc list-inside">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-    <!-- Recent Sales Handled by this Cashier -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
-        <div class="flex items-center justify-between mb-5">
+    <!-- Permintaan Buka Open Bill dari Pelanggan -->
+    @if(isset($pendingOpenBillRequests) && $pendingOpenBillRequests->isNotEmpty())
+        <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-400 rounded-3xl p-5 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-3 h-3 rounded-full bg-amber-500 animate-ping"></span>
+                    <h3 class="font-bold text-sm text-amber-950 font-serif-classic">
+                        Permintaan Buka Open Bill Masuk ({{ $pendingOpenBillRequests->count() }} Meja Menunggu Konfirmasi)
+                    </h3>
+                </div>
+                <span class="text-[11px] font-bold text-amber-800 bg-amber-200/60 px-2.5 py-0.5 rounded-full">Tindakan Kasir</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                @foreach($pendingOpenBillRequests as $req)
+                    <div class="bg-white rounded-2xl p-4 border border-amber-200 shadow-2xs flex flex-col justify-between gap-3">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="font-mono font-bold text-xs text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg">{{ $req->table_number }}</span>
+                                <span class="text-[10px] text-slate-400">{{ $req->created_at->diffForHumans() }}</span>
+                            </div>
+                            <h4 class="font-bold text-sm text-slate-900 mt-2">{{ $req->table->name ?? 'Meja ' . $req->table_number }}</h4>
+                            @if($req->customer_name)
+                                <p class="text-xs text-slate-600 mt-0.5">Pemohon: <strong>{{ $req->customer_name }}</strong></p>
+                            @endif
+                            @if($req->notes)
+                                <p class="text-[11px] text-slate-500 italic mt-1">"{{ $req->notes }}"</p>
+                            @endif
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                            <form action="{{ route('cashier.open_bills.approve', $req->id) }}" method="POST" class="flex-1">
+                                @csrf
+                                <button type="submit" class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    Setujui
+                                </button>
+                            </form>
+                            <form action="{{ route('cashier.open_bills.reject', $req->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" onclick="return confirm('Tolak permintaan Open Bill meja ini?')" class="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition">
+                                    Tolak
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    <!-- Kartu Status Ringkasan Kasir -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
             <div>
-                <h3 class="font-bold text-base text-slate-800">Transaksi Terakhir Anda</h3>
-                <p class="text-xs text-slate-500">Struk digital dari penjualan yang baru saja Anda layani.</p>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Belum Dibayar (Hari Ini)</span>
+                <div class="text-2xl font-black text-rose-600 tracking-tight mt-1">
+                    Rp {{ number_format($unpaidTotal, 0, ',', '.') }}
+                </div>
+                <p class="text-xs text-slate-500 mt-1">{{ $unpaidCount }} pesanan menanti konfirmasi</p>
             </div>
-            <a href="{{ route('cashier.transactions.index') }}" class="text-xs font-semibold text-emerald-600 hover:text-emerald-800">
-                Lihat Seluruh Riwayat Anda &rarr;
-            </a>
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
         </div>
 
-        @if($recentSales->isEmpty())
-            <div class="p-10 text-center text-slate-400">
-                <svg class="w-12 h-12 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <p class="text-sm font-medium">Anda belum melakukan transaksi hari ini.</p>
-                <a href="{{ route('pos.index') }}" class="inline-block mt-3 text-xs font-bold text-emerald-600 hover:underline">
-                    Klik di sini untuk membuka mesin kasir &rarr;
-                </a>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Sudah Dibayar (Lunas)</span>
+                <div class="text-2xl font-black text-emerald-600 tracking-tight mt-1">
+                    Rp {{ number_format($paidTotal, 0, ',', '.') }}
+                </div>
+                <p class="text-xs text-slate-500 mt-1">{{ $paidCount }} pesanan telah selesai</p>
             </div>
-        @else
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-100 text-slate-400 text-xs uppercase tracking-wider font-semibold">
-                            <th class="pb-3">No. Transaksi</th>
-                            <th class="pb-3">Waktu</th>
-                            <th class="pb-3">Metode</th>
-                            <th class="pb-3 text-right">Total</th>
-                            <th class="pb-3 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @foreach($recentSales as $sale)
-                            <tr class="hover:bg-slate-50 transition">
-                                <td class="py-3 font-mono text-xs font-bold text-emerald-700">
-                                    {{ $sale->transaction_number }}
-                                </td>
-                                <td class="py-3 text-xs text-slate-500">
-                                    {{ $sale->transaction_date->format('d/m/Y H:i') }}
-                                </td>
-                                <td class="py-3 text-xs">
-                                    <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700">
-                                        {{ $sale->payment->methodLabel() ?? 'Tunai' }}
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Open Bill Aktif</span>
+                <div class="text-2xl font-black text-amber-600 tracking-tight mt-1">
+                    {{ $activeOpenBillsCount }} <span class="text-sm font-normal text-slate-400">meja</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Tagihan sesi meja digabungkan</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">QR Meja Pelanggan</span>
+                <div class="text-2xl font-black text-indigo-600 tracking-tight mt-1">
+                    {{ $tables->count() }} <span class="text-sm font-normal text-slate-400">meja</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Link pemesanan mandiri aktif</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Pencarian Pesanan -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4">
+        <form action="{{ route('cashier.dashboard') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+            <div class="sm:col-span-5">
+                <input type="text" name="search" value="{{ request('search') }}"
+                    placeholder="Cari ID Pesanan (ORD...) atau Nama..."
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            </div>
+
+            <div class="sm:col-span-3">
+                <select name="payment_status" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
+                    <option value="all">Semua Status Pembayaran</option>
+                    <option value="unpaid" {{ request('payment_status') === 'unpaid' ? 'selected' : '' }}>Belum Dibayar</option>
+                    <option value="paid" {{ request('payment_status') === 'paid' ? 'selected' : '' }}>Lunas</option>
+                </select>
+            </div>
+
+            <div class="sm:col-span-2">
+                <select name="table_number" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700">
+                    <option value="all">Semua Meja</option>
+                    @foreach($tables as $t)
+                        <option value="{{ $t->table_number }}" {{ request('table_number') === $t->table_number ? 'selected' : '' }}>{{ $t->table_number }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="sm:col-span-2 flex gap-1.5">
+                <button type="submit" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-sm">
+                    Filter
+                </button>
+                @if(request()->hasAny(['search', 'payment_status', 'table_number']))
+                    <a href="{{ route('cashier.dashboard') }}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center justify-center">
+                        Reset
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
+
+    <!-- TABEL UTAMA DASHBOARD KASIR SESUAI SPESIFIKASI REVISI -->
+    <!-- Kolom: ID Pesanan | Meja | Total | Pembayaran | Aksi -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <h3 class="font-bold text-slate-900 text-base">Tabel Pesanan Masuk Pelanggan</h3>
+                <p class="text-xs text-slate-500">Konfirmasi pembayaran setelah menerima uang tunai atau bukti transfer/QRIS.</p>
+            </div>
+            <div class="text-xs text-slate-400">
+                Menampilkan <span class="font-bold text-slate-700">{{ $sales->total() }}</span> pesanan
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-200/80 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                        <th class="py-3.5 px-6">ID Pesanan</th>
+                        <th class="py-3.5 px-6">Meja</th>
+                        <th class="py-3.5 px-6 text-right">Total</th>
+                        <th class="py-3.5 px-6 text-center">Pembayaran</th>
+                        <th class="py-3.5 px-6 text-center">Status Dapur</th>
+                        <th class="py-3.5 px-6 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    @forelse($sales as $sale)
+                        <tr class="hover:bg-slate-50/70 transition">
+                            <!-- ID Pesanan (misal: ORD001) -->
+                            <td class="py-4 px-6 font-mono text-xs font-extrabold text-amber-800">
+                                <div>{{ $sale->transaction_number }}</div>
+                                <div class="text-[11px] font-normal font-sans text-slate-400 mt-0.5">
+                                    {{ $sale->transaction_date->format('H:i') }} WIB
+                                    @if($sale->customer_name)
+                                        &bull; <span class="text-slate-600 font-medium">{{ $sale->customer_name }}</span>
+                                    @endif
+                                </div>
+                            </td>
+
+                            <!-- Meja (misal: M001) -->
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-extrabold bg-stone-100 text-stone-800 border border-stone-300">
+                                    <svg class="w-3.5 h-3.5 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    {{ $sale->table_number ?? 'M001' }}
+                                </span>
+                                @if($sale->open_bill_id)
+                                    <span class="block text-[10px] font-bold text-amber-600 mt-1">Open Bill #{{ $sale->openBill?->bill_number }}</span>
+                                @endif
+                            </td>
+
+                            <!-- Total (misal: Rp45.000) -->
+                            <td class="py-4 px-6 text-right font-black text-slate-900 text-sm">
+                                Rp {{ number_format($sale->total_amount, 0, ',', '.') }}
+                                <span class="block text-[11px] font-normal text-slate-400">{{ $sale->items->sum('quantity') }} menu</span>
+                            </td>
+
+                            <!-- Pembayaran (Belum Dibayar / Lunas) -->
+                            <td class="py-4 px-6 text-center">
+                                @if($sale->isPaid())
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                        Lunas
                                     </span>
-                                </td>
-                                <td class="py-3 text-right font-bold text-slate-900 text-xs">
-                                    Rp {{ number_format($sale->total_amount, 0, ',', '.') }}
-                                </td>
-                                <td class="py-3 text-right">
-                                    <a href="{{ route('pos.receipt', $sale->id) }}" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition">
-                                        Lihat Struk
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                    @if($sale->payment)
+                                        <span class="block text-[10px] font-semibold text-emerald-700 mt-0.5">{{ $sale->payment->methodLabel() }}</span>
+                                    @endif
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                                        <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Belum Dibayar
+                                    </span>
+                                @endif
+                            </td>
+
+                            <!-- Status Dapur (Informatif untuk Kasir: Menunggu, Diproses, Selesai) -->
+                            <td class="py-4 px-6 text-center">
+                                @if($sale->order_status === 'completed')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 text-blue-700">
+                                        Selesai
+                                    </span>
+                                @elseif($sale->order_status === 'processing')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700">
+                                        Diproses
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700">
+                                        Menunggu
+                                    </span>
+                                @endif
+                            </td>
+
+                            <!-- Aksi (Jika Belum Dibayar: Konfirmasi, Jika Lunas: Detail) -->
+                            <td class="py-4 px-6 text-right">
+                                <div class="inline-flex items-center gap-2">
+                                    @if($sale->isUnpaid())
+                                        <!-- Tombol Konfirmasi Pembayaran -->
+                                        <button type="button"
+                                            onclick="openConfirmModal('{{ $sale->id }}', '{{ $sale->transaction_number }}', '{{ $sale->table_number ?? 'M001' }}', '{{ (float)$sale->total_amount }}')"
+                                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition transform hover:scale-105 active:scale-95">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Konfirmasi
+                                        </button>
+                                    @else
+                                        <!-- Tombol Detail / Struk untuk pesanan Lunas -->
+                                        <button type="button"
+                                            onclick="openDetailModal('{{ $sale->id }}')"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+                                            Detail
+                                        </button>
+                                        <a href="{{ route('pos.receipt', $sale->id) }}" target="_blank"
+                                            class="inline-flex items-center px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition" title="Cetak Struk">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                            </svg>
+                                        </a>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="py-12 text-center text-slate-400">
+                                <svg class="w-12 h-12 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <p class="text-sm font-semibold text-slate-600">Belum ada pesanan masuk.</p>
+                                <p class="text-xs text-slate-400 mt-1">Pelanggan dapat melakukan pemesanan makanan melalui link QR Code meja.</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($sales->hasPages())
+            <div class="p-4 border-t border-slate-100">
+                {{ $sales->links() }}
             </div>
         @endif
     </div>
+
+
 </div>
+
+<!-- MODAL KONFIRMASI PEMBAYARAN KASIR -->
+<div id="confirmModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 transform transition-all">
+        <form id="confirmForm" method="POST" action="">
+            @csrf
+            <div class="p-6 bg-gradient-to-r from-amber-600 to-amber-700 text-white flex items-center justify-between">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-amber-200">Konfirmasi Pembayaran Kasir</span>
+                    <h3 id="modalOrderNumber" class="text-xl font-black mt-0.5">ORD001</h3>
+                </div>
+                <div id="modalTableNumber" class="px-3 py-1 rounded-xl bg-white/20 text-white font-extrabold text-sm backdrop-blur-md">
+                    Meja M001
+                </div>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Tagihan</label>
+                    <div id="modalTotalFormatted" class="text-3xl font-black text-slate-900">
+                        Rp 0
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Pilih Metode Pembayaran</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="payment_method" value="cash" checked class="peer sr-only" onchange="toggleTenderedInput(true)">
+                            <div class="p-2.5 rounded-xl border border-slate-200 text-center text-xs font-bold peer-checked:border-amber-600 peer-checked:bg-amber-50 peer-checked:text-amber-800 transition">
+                                Tunai
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="payment_method" value="qris" class="peer sr-only" onchange="toggleTenderedInput(false)">
+                            <div class="p-2.5 rounded-xl border border-slate-200 text-center text-xs font-bold peer-checked:border-amber-600 peer-checked:bg-amber-50 peer-checked:text-amber-800 transition">
+                                QRIS
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="payment_method" value="transfer" class="peer sr-only" onchange="toggleTenderedInput(false)">
+                            <div class="p-2.5 rounded-xl border border-slate-200 text-center text-xs font-bold peer-checked:border-amber-600 peer-checked:bg-amber-50 peer-checked:text-amber-800 transition">
+                                Transfer
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="tenderedWrapper" class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-600">Jumlah Uang Diterima (Rp) *</label>
+                    <input type="number" id="inputTendered" name="amount_tendered" step="500" min="0"
+                        placeholder="Ketik nominal uang yang diterima dari pelanggan..."
+                        oninput="calculateChange()"
+                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+
+                    <div class="flex items-center justify-between text-xs pt-1">
+                        <span class="text-slate-500 font-medium">Uang Kembalian:</span>
+                        <span id="labelChange" class="font-black text-emerald-600 text-sm">Rp 0</span>
+                    </div>
+
+                    <div class="pt-1.5 space-y-2">
+                        <button type="button" onclick="setExactAmount()" class="w-full py-2 px-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-xs font-black text-amber-900 border border-amber-300 transition flex items-center justify-center gap-2 shadow-2xs">
+                            <svg class="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Uang Pas: <span id="labelExactAmount">Rp 0</span></span>
+                        </button>
+                        
+                        <div class="grid grid-cols-4 gap-1.5 text-[11px] font-bold text-slate-700">
+                            <button type="button" onclick="setPresetAmount(10000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">10rb</button>
+                            <button type="button" onclick="setPresetAmount(20000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">20rb</button>
+                            <button type="button" onclick="setPresetAmount(50000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">50rb</button>
+                            <button type="button" onclick="setPresetAmount(100000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">100rb</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2 text-xs text-slate-400">
+                    Sistem akan mencatat ID Kasir Anda ({{ auth()->user()->name }}) dan waktu konfirmasi pembayaran ini secara permanen.
+                </div>
+            </div>
+
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeConfirmModal()" class="px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-200 text-xs font-bold transition">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold shadow-md transition transform hover:scale-105 active:scale-95">
+                    Konfirmasi Pembayaran Lunas
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL DETAIL PESANAN KASIR -->
+<div id="detailModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-100">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Rincian Menu Pesanan</span>
+                <h3 id="detailOrderTitle" class="text-lg font-black text-slate-900">Detail Pesanan</h3>
+            </div>
+            <button type="button" onclick="closeDetailModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="p-6 max-h-[60vh] overflow-y-auto space-y-4" id="detailModalContent">
+            <!-- Dynamic Content populated via JS -->
+        </div>
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <button type="button" onclick="closeDetailModal()" class="px-4 py-2 rounded-xl bg-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-300 transition">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentOrderTotal = 0;
+
+    // Cache of sales for Detail Modal
+    const salesData = @json($sales->items());
+
+    function openConfirmModal(saleId, orderNumber, tableNumber, totalAmount) {
+        currentOrderTotal = parseFloat(totalAmount);
+        document.getElementById('confirmForm').action = "/cashier/orders/" + saleId + "/confirm-payment";
+        document.getElementById('modalOrderNumber').innerText = orderNumber;
+        document.getElementById('modalTableNumber').innerText = "Meja " + tableNumber;
+        document.getElementById('modalTotalFormatted').innerText = "Rp " + new Intl.NumberFormat('id-ID').format(currentOrderTotal);
+        document.getElementById('labelExactAmount').innerText = "Rp " + new Intl.NumberFormat('id-ID').format(currentOrderTotal);
+        
+        // Kolom jumlah uang yang diterima dikosongkan secara default sesuai instruksi user
+        document.getElementById('inputTendered').value = '';
+        document.getElementById('labelChange').innerText = "Rp 0";
+
+        document.getElementById('confirmModal').classList.remove('hidden');
+        setTimeout(() => {
+            document.getElementById('inputTendered').focus();
+        }, 100);
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').classList.add('hidden');
+    }
+
+    function toggleTenderedInput(isCash) {
+        const wrapper = document.getElementById('tenderedWrapper');
+        if (isCash) {
+            wrapper.classList.remove('hidden');
+            document.getElementById('inputTendered').value = '';
+            document.getElementById('labelChange').innerText = "Rp 0";
+        } else {
+            wrapper.classList.add('hidden');
+            document.getElementById('inputTendered').value = currentOrderTotal;
+        }
+    }
+
+    function setExactAmount() {
+        document.getElementById('inputTendered').value = currentOrderTotal;
+        calculateChange();
+    }
+
+    function setPresetAmount(amount) {
+        document.getElementById('inputTendered').value = amount;
+        calculateChange();
+    }
+
+    function calculateChange() {
+        const tenderedStr = document.getElementById('inputTendered').value;
+        if (!tenderedStr) {
+            document.getElementById('labelChange').innerText = "Rp 0";
+            return;
+        }
+        const tendered = parseFloat(tenderedStr) || 0;
+        const change = Math.max(0, tendered - currentOrderTotal);
+        document.getElementById('labelChange').innerText = "Rp " + new Intl.NumberFormat('id-ID').format(change);
+    }
+
+    function openDetailModal(saleId) {
+        const sale = salesData.find(s => s.id == saleId);
+        if (!sale) return;
+
+        document.getElementById('detailOrderTitle').innerText = sale.transaction_number + " (Meja " + (sale.table_number || 'M001') + ")";
+        
+        let itemsHtml = '<div class="divide-y divide-slate-100">';
+        if (sale.items && sale.items.length > 0) {
+            sale.items.forEach(item => {
+                itemsHtml += `
+                    <div class="py-2.5 flex items-center justify-between text-xs">
+                        <div>
+                            <span class="font-bold text-slate-800">${item.quantity}x ${item.product_name_snapshot}</span>
+                            <span class="text-slate-400 block text-[11px]">@ Rp ${new Intl.NumberFormat('id-ID').format(item.unit_price)}</span>
+                        </div>
+                        <span class="font-black text-slate-900">Rp ${new Intl.NumberFormat('id-ID').format(item.line_total)}</span>
+                    </div>
+                `;
+            });
+        }
+        itemsHtml += '</div>';
+
+        let infoHtml = `
+            <div class="bg-slate-50 p-3.5 rounded-2xl space-y-1.5 text-xs">
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Status Pembayaran:</span>
+                    <span class="font-bold ${sale.payment_status === 'paid' ? 'text-emerald-700' : 'text-rose-700'}">${sale.payment_status === 'paid' ? 'LUNAS' : 'BELUM DIBAYAR'}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Status Dapur:</span>
+                    <span class="font-bold text-slate-800">${sale.order_status === 'completed' ? 'Selesai' : (sale.order_status === 'processing' ? 'Diproses' : 'Menunggu')}</span>
+                </div>
+                ${sale.confirmed_at ? `
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Dikonfirmasi Oleh:</span>
+                    <span class="font-semibold text-slate-700">${sale.confirmer ? sale.confirmer.name : 'Kasir'}</span>
+                </div>` : ''}
+            </div>
+        `;
+
+        let totalHtml = `
+            <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+                <span class="font-bold text-slate-600 text-xs uppercase">Total Tagihan:</span>
+                <span class="text-xl font-black text-slate-900">Rp ${new Intl.NumberFormat('id-ID').format(sale.total_amount)}</span>
+            </div>
+        `;
+
+        document.getElementById('detailModalContent').innerHTML = itemsHtml + infoHtml + totalHtml;
+        document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').classList.add('hidden');
+    }
+</script>
 @endsection

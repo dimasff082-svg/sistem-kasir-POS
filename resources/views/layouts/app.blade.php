@@ -41,9 +41,9 @@
     @stack('styles')
 </head>
 <body class="h-full flex flex-col antialiased text-[#2c261e] bg-[#f7f5ef]">
-    <div class="min-h-full flex">
+    <div class="min-h-full flex relative">
         <!-- Sidebar Navigation (Classic Modern Theme) -->
-        <aside class="w-64 bg-[#191714] text-[#d6cfc2] flex flex-col shrink-0 border-r border-[#2b261f] shadow-2xl transition-all">
+        <aside id="app-sidebar" class="w-64 bg-[#191714] text-[#d6cfc2] flex flex-col shrink-0 border-r border-[#2b261f] shadow-2xl transition-all duration-300 ease-in-out z-40">
             <!-- Brand Header: Classic Emblem without "sistem kasir Point of sale" text -->
             <div class="h-16 flex items-center px-6 gap-3 bg-[#12110e] border-b border-[#2b261f]">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#c59b27] via-[#a87f1c] to-[#73550b] flex items-center justify-center text-[#181305] shadow-md shadow-black/50 border border-[#e5be58]/40">
@@ -59,14 +59,14 @@
 
             <!-- User Info Badge -->
             <div class="p-3.5 mx-3 my-3 rounded-2xl bg-[#23201b] border border-[#383228] flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br {{ auth()->user()->isOwner() ? 'from-amber-600 to-amber-800 border border-amber-400/40 text-amber-100' : (auth()->user()->isAdmin() ? 'from-stone-700 to-stone-900 border border-stone-500/30 text-stone-100' : 'from-emerald-700 to-emerald-900 border border-emerald-500/30 text-emerald-100') }} flex items-center justify-center font-serif-classic font-bold text-base shadow">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br {{ auth()->user()->isOwner() ? 'from-amber-600 to-amber-800 border border-amber-400/40 text-amber-100' : (auth()->user()->isAdmin() ? 'from-stone-700 to-stone-900 border border-stone-500/30 text-stone-100' : (auth()->user()->isKitchen() ? 'from-blue-700 to-indigo-900 border border-blue-500/30 text-blue-100' : 'from-emerald-700 to-emerald-900 border border-emerald-500/30 text-emerald-100')) }} flex items-center justify-center font-serif-classic font-bold text-base shadow">
                     {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                 </div>
                 <div class="overflow-hidden">
                     <p class="text-xs font-semibold text-[#f2ece1] truncate">{{ auth()->user()->name }}</p>
-                    <span class="inline-flex items-center gap-1.5 text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full {{ auth()->user()->isOwner() ? 'bg-amber-500/20 text-[#eac36c] border border-amber-500/30' : (auth()->user()->isAdmin() ? 'bg-stone-500/20 text-stone-300 border border-stone-600/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30') }}">
-                        <span class="w-1.5 h-1.5 rounded-full {{ auth()->user()->isOwner() ? 'bg-amber-400' : (auth()->user()->isAdmin() ? 'bg-stone-400' : 'bg-emerald-400') }}"></span>
-                        {{ auth()->user()->isOwner() ? 'PEMILIK TOKO' : (auth()->user()->isAdmin() ? 'ADMINISTRATOR' : 'KASIR') }}
+                    <span class="inline-flex items-center gap-1.5 text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full {{ auth()->user()->isOwner() ? 'bg-amber-500/20 text-[#eac36c] border border-amber-500/30' : (auth()->user()->isAdmin() ? 'bg-stone-500/20 text-stone-300 border border-stone-600/30' : (auth()->user()->isKitchen() ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30')) }}">
+                        <span class="w-1.5 h-1.5 rounded-full {{ auth()->user()->isOwner() ? 'bg-amber-400' : (auth()->user()->isAdmin() ? 'bg-stone-400' : (auth()->user()->isKitchen() ? 'bg-blue-400' : 'bg-emerald-400')) }}"></span>
+                        {{ auth()->user()->isOwner() ? 'PEMILIK TOKO' : (auth()->user()->isAdmin() ? 'ADMINISTRATOR' : (auth()->user()->isKitchen() ? 'STAF DAPUR' : 'KASIR')) }}
                     </span>
                 </div>
             </div>
@@ -88,9 +88,25 @@
                         </svg>
                         Laporan Penjualan
                     </a>
+                    <a href="{{ route('owner.transactions.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('owner.transactions.*') || request()->routeIs('admin.transactions.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md shadow-amber-950/30' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Riwayat Transaksi
+                    </a>
+
+                @elseif(auth()->user()->isKitchen())
+                    <!-- Kitchen Staff Navigation -->
+                    <div class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Dapur Resto</div>
+                    <a href="{{ route('kitchen.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('kitchen.*') ? 'bg-indigo-600 text-white font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                        Layar Dapur (KDS)
+                    </a>
 
                 @elseif(auth()->user()->isAdmin())
-                    <!-- Admin Navigation: No POS menu here! -->
+                    <!-- Admin Navigation -->
                     <div class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Utama</div>
                     <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('admin.dashboard') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,24 +115,44 @@
                         Dashboard Ringkasan
                     </a>
 
-                    <div class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Master Data</div>
+                    <div class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Operasional Resto</div>
+                    <a href="{{ route('cashier.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('cashier.dashboard') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Pesanan Masuk (Kasir)
+                    </a>
+                    <a href="{{ route('cashier.open_bills.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('cashier.open_bills.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        Open Bill Meja
+                    </a>
+                    <a href="{{ route('admin.tables.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('admin.tables.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 9a2 2 0 012 2v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5a2 2 0 012-2m0 0h8" />
+                        </svg>
+                        Data Meja & QR Code
+                    </a>
+                    <a href="{{ route('kitchen.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('kitchen.*') ? 'bg-indigo-600 text-white font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                        Layar Dapur (KDS)
+                    </a>
+
+                    <div class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Master Menu</div>
                     <a href="{{ route('admin.categories.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('admin.categories.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                         </svg>
-                        Kategori Barang
+                        Kategori Menu
                     </a>
                     <a href="{{ route('admin.products.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('admin.products.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
-                        Data Barang
-                    </a>
-                    <a href="{{ route('admin.stock.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('admin.stock.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
-                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                        </svg>
-                        Stok & Penyesuaian
+                        Data Menu Makanan
                     </a>
 
                     <div class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Audit & Penjualan</div>
@@ -142,25 +178,25 @@
                     </a>
 
                 @else
-                    <!-- Cashier Navigation -->
-                    <div class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Kasir Terminal</div>
+                    <!-- Cashier Navigation: No manual POS menu & No Kitchen for Cashier -->
+                    <div class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Kasir Restoran</div>
                     <a href="{{ route('cashier.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('cashier.dashboard') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
-                        Dashboard Kasir
+                        Pesanan Masuk (Kasir)
                     </a>
-                    <a href="{{ route('pos.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('pos.*') ? 'bg-[#2d6a4f] text-emerald-100 font-bold shadow-md border border-emerald-400/30' : 'text-emerald-400 hover:bg-[#25221c] hover:text-emerald-300' }}">
+                    <a href="{{ route('cashier.open_bills.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('cashier.open_bills.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
-                        Transaksi Penjualan
+                        Kelola Open Bill Meja
                     </a>
                     <a href="{{ route('cashier.transactions.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('cashier.transactions.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        Riwayat Penjualan Saya
+                        Riwayat Transaksi Lunas
                     </a>
                 @endif
             </nav>
@@ -179,11 +215,23 @@
             </div>
         </aside>
 
+        <!-- Mobile Backdrop Overlay for Sidebar -->
+        <div id="sidebar-backdrop" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-stone-900/60 z-30 md:hidden backdrop-blur-2xs transition-opacity"></div>
+
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col min-w-0 bg-[#f7f5ef]">
             <!-- Topbar Header (Classic Modern with Shopping Bag Logo + Point of Sale text, NO Kasir Baru button) -->
-            <header class="h-16 bg-[#ffffff]/95 backdrop-blur-md border-b border-[#e5dfd3] flex items-center justify-between px-8 sticky top-0 z-20 shadow-[0_2px_12px_-4px_rgba(40,30,15,0.05)]">
-                <div class="flex items-center gap-3.5">
+            <header class="h-16 bg-[#ffffff]/95 backdrop-blur-md border-b border-[#e5dfd3] flex items-center justify-between px-6 sm:px-8 sticky top-0 z-20 shadow-[0_2px_12px_-4px_rgba(40,30,15,0.05)]">
+                <div class="flex items-center gap-3">
+                    <!-- Toggle Sidebar Button (Admin, Kasir, Pemilik, Dapur) -->
+                    <button type="button" id="sidebar-toggle-btn" onclick="toggleSidebar()"
+                        class="w-9 h-9 rounded-xl bg-[#faf7f0] hover:bg-[#ede7da] text-[#3d3429] flex items-center justify-center border border-[#dcd4c5] transition shadow-2xs hover:scale-105 active:scale-95 focus:outline-none"
+                        title="Buka / Tutup Sidebar (Alt + B)" aria-label="Toggle Sidebar">
+                        <svg class="w-5 h-5 text-[#3d3429]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+
                     <!-- Shopping bag logo -->
                     <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#c59b27] via-[#a87f1c] to-[#73550b] flex items-center justify-center text-stone-950 shadow-sm border border-[#e5be58]/50">
                         <svg class="w-5 h-5 text-amber-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -359,6 +407,10 @@
                             </div>
                             @endif
                             <div class="flex items-center justify-between">
+                                <span class="text-[#4d4437] font-medium">Buka / Tutup Sidebar</span>
+                                <kbd class="shortcut-key">Alt+B</kbd>
+                            </div>
+                            <div class="flex items-center justify-between">
                                 <span class="text-[#4d4437] font-medium">Tutup Modal / Batal</span>
                                 <kbd class="shortcut-key">Esc</kbd>
                             </div>
@@ -378,6 +430,42 @@
     </div>
 
     <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (!sidebar) return;
+
+            const isCollapsed = sidebar.classList.contains('-ml-64');
+            if (isCollapsed) {
+                sidebar.classList.remove('-ml-64');
+                if (backdrop && window.innerWidth < 768) {
+                    backdrop.classList.remove('hidden');
+                }
+                localStorage.setItem('sidebar_collapsed', 'false');
+            } else {
+                sidebar.classList.add('-ml-64');
+                if (backdrop) {
+                    backdrop.classList.add('hidden');
+                }
+                localStorage.setItem('sidebar_collapsed', 'true');
+            }
+        }
+
+        // Restore saved sidebar state
+        (function initSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (!sidebar) return;
+
+            const saved = localStorage.getItem('sidebar_collapsed');
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('-ml-64');
+                if (backdrop) backdrop.classList.add('hidden');
+            } else if (saved === 'true') {
+                sidebar.classList.add('-ml-64');
+            }
+        })();
+
         function updateClock() {
             const el = document.getElementById('live-clock');
             if (el) {
@@ -437,6 +525,13 @@
                     closeGlobalShortcutModal();
                     return;
                 }
+            }
+
+            // Alt + B: Toggle Sidebar
+            if (e.altKey && (e.key === 'b' || e.key === 'B')) {
+                e.preventDefault();
+                toggleSidebar();
+                return;
             }
 
             // Alt + D: Navigate to Dashboard

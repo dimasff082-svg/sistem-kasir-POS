@@ -18,17 +18,12 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
-        $purchasePrice = fake()->numberBetween(5000, 50000);
-
         return [
             'category_id' => Category::factory(),
-            'sku' => 'BRG-'.fake()->unique()->numerify('#####'),
+            'sku' => 'MNU-'.fake()->unique()->numerify('#####'),
             'name' => fake()->words(3, true),
-            'unit' => 'pcs',
-            'purchase_price' => $purchasePrice,
-            'selling_price' => $purchasePrice + fake()->numberBetween(2000, 20000),
-            'stock' => fake()->numberBetween(10, 100),
-            'minimum_stock' => 5,
+            'unit' => 'porsi',
+            'selling_price' => fake()->numberBetween(10000, 75000),
             'is_active' => true,
         ];
     }
