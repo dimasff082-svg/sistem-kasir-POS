@@ -412,10 +412,11 @@
 
                 <div id="tenderedWrapper" class="space-y-2">
                     <label class="block text-xs font-bold text-slate-600">Jumlah Uang Diterima (Rp) *</label>
-                    <input type="number" id="inputTendered" name="amount_tendered" step="500" min="0"
-                        placeholder="Ketik nominal uang yang diterima dari pelanggan..."
-                        oninput="calculateChange()"
+                    <input type="text" id="inputTendered" inputmode="numeric"
+                        placeholder="Ketik nominal uang dari pelanggan (contoh: 60.000)..."
+                        oninput="handleTenderedInput(this)"
                         class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <input type="hidden" id="rawAmountTendered" name="amount_tendered" value="">
 
                     <div class="flex items-center justify-between text-xs pt-1">
                         <span class="text-slate-500 font-medium">Uang Kembalian:</span>
@@ -431,10 +432,10 @@
                         </button>
                         
                         <div class="grid grid-cols-4 gap-1.5 text-[11px] font-bold text-slate-700">
-                            <button type="button" onclick="setPresetAmount(10000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">10rb</button>
-                            <button type="button" onclick="setPresetAmount(20000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">20rb</button>
-                            <button type="button" onclick="setPresetAmount(50000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">50rb</button>
-                            <button type="button" onclick="setPresetAmount(100000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">100rb</button>
+                            <button type="button" onclick="setPresetAmount(10000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">10.000</button>
+                            <button type="button" onclick="setPresetAmount(20000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">20.000</button>
+                            <button type="button" onclick="setPresetAmount(50000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">50.000</button>
+                            <button type="button" onclick="setPresetAmount(100000)" class="py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">100.000</button>
                         </div>
                     </div>
                 </div>
@@ -487,6 +488,24 @@
     // Cache of sales for Detail Modal
     const salesData = @json($sales->items());
 
+    function getCleanNumericValue(str) {
+        if (!str) return 0;
+        const cleaned = String(str).replace(/[^\d]/g, '');
+        return cleaned ? parseInt(cleaned, 10) : 0;
+    }
+
+    function handleTenderedInput(inputEl) {
+        const raw = getCleanNumericValue(inputEl.value);
+        if (raw > 0) {
+            inputEl.value = Number(raw).toLocaleString('id-ID');
+            document.getElementById('rawAmountTendered').value = raw;
+        } else {
+            inputEl.value = '';
+            document.getElementById('rawAmountTendered').value = '';
+        }
+        calculateChange();
+    }
+
     function openConfirmModal(saleId, orderNumber, tableNumber, totalAmount) {
         currentOrderTotal = parseFloat(totalAmount);
         document.getElementById('confirmForm').action = "/cashier/orders/" + saleId + "/confirm-payment";
@@ -497,6 +516,7 @@
         
         // Kolom jumlah uang yang diterima dikosongkan secara default sesuai instruksi user
         document.getElementById('inputTendered').value = '';
+        document.getElementById('rawAmountTendered').value = '';
         document.getElementById('labelChange').innerText = "Rp 0";
 
         document.getElementById('confirmModal').classList.remove('hidden');
@@ -514,30 +534,29 @@
         if (isCash) {
             wrapper.classList.remove('hidden');
             document.getElementById('inputTendered').value = '';
+            document.getElementById('rawAmountTendered').value = '';
             document.getElementById('labelChange').innerText = "Rp 0";
         } else {
             wrapper.classList.add('hidden');
-            document.getElementById('inputTendered').value = currentOrderTotal;
+            document.getElementById('inputTendered').value = Number(currentOrderTotal).toLocaleString('id-ID');
+            document.getElementById('rawAmountTendered').value = currentOrderTotal;
         }
     }
 
     function setExactAmount() {
-        document.getElementById('inputTendered').value = currentOrderTotal;
+        document.getElementById('inputTendered').value = Number(currentOrderTotal).toLocaleString('id-ID');
+        document.getElementById('rawAmountTendered').value = currentOrderTotal;
         calculateChange();
     }
 
     function setPresetAmount(amount) {
-        document.getElementById('inputTendered').value = amount;
+        document.getElementById('inputTendered').value = Number(amount).toLocaleString('id-ID');
+        document.getElementById('rawAmountTendered').value = amount;
         calculateChange();
     }
 
     function calculateChange() {
-        const tenderedStr = document.getElementById('inputTendered').value;
-        if (!tenderedStr) {
-            document.getElementById('labelChange').innerText = "Rp 0";
-            return;
-        }
-        const tendered = parseFloat(tenderedStr) || 0;
+        const tendered = getCleanNumericValue(document.getElementById('inputTendered').value);
         const change = Math.max(0, tendered - currentOrderTotal);
         document.getElementById('labelChange').innerText = "Rp " + new Intl.NumberFormat('id-ID').format(change);
     }

@@ -27,6 +27,8 @@ class UnifiedTransactionRecord
 
     public bool $is_open_bill;
 
+    public bool $is_takeaway = false;
+
     public string $badge_label;
 
     public string $transaction_number;
@@ -77,10 +79,11 @@ class UnifiedTransactionRecord
         $record->raw_id = $sale->id;
         $record->type = 'sale';
         $record->is_open_bill = false;
-        $record->badge_label = 'Reguler';
+        $record->is_takeaway = ($sale->table_number === 'TAKEAWAY');
+        $record->badge_label = $record->is_takeaway ? 'Takeaway' : 'Reguler';
         $record->transaction_number = $sale->transaction_number;
         $record->transaction_date = $sale->transaction_date ?? ($sale->created_at ?? now());
-        $record->table_number = $sale->table_number;
+        $record->table_number = $record->is_takeaway ? 'Bawa Pulang (Takeaway)' : $sale->table_number;
         $record->customer_name = $sale->customer_name;
         $record->cashier_name = $sale->confirmer?->name ?? ($sale->user?->name ?? 'Kasir');
         $record->user = $sale->user;

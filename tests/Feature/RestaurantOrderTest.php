@@ -1271,6 +1271,20 @@ class RestaurantOrderTest extends TestCase
         $kitchenResponse->assertOk();
         $kitchenResponse->assertSee($sale->transaction_number);
         $kitchenResponse->assertSee('BAWA PULANG (TAKEAWAY)');
+
+        // Verifikasi transaksi takeaway muncul di Riwayat Transaksi Lunas Kasir
+        $cashierHistory = $this->actingAs($this->cashier)->get(route('cashier.transactions.index'));
+        $cashierHistory->assertOk();
+        $cashierHistory->assertSee($sale->transaction_number);
+        $cashierHistory->assertSee('Takeaway');
+        $cashierHistory->assertSee('Bawa Pulang');
+
+        // Verifikasi transaksi takeaway muncul di Riwayat Transaksi Admin
+        $adminHistory = $this->actingAs($this->admin)->get(route('admin.transactions.index'));
+        $adminHistory->assertOk();
+        $adminHistory->assertSee($sale->transaction_number);
+        $adminHistory->assertSee('Takeaway');
+        $adminHistory->assertSee('Bawa Pulang');
     }
 
     public function test_takeaway_order_can_be_checked_out_by_admin(): void
@@ -1319,6 +1333,29 @@ class RestaurantOrderTest extends TestCase
         $response->assertStatus(422);
         $response->assertJson([
             'success' => false,
+        ]);
+    }
+
+    public function test_takeaway_order_without_cash_tendered_fails_validation(): void
+    {
+        $payload = [
+            'payment_method' => 'cash',
+            'amount_tendered' => null, // Kasir lupa mengisi nominal uang tunai
+            'items' => [
+                [
+                    'id' => $this->food->id,
+                    'quantity' => 1,
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->cashier)
+            ->postJson(route('takeaway.checkout'), $payload);
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Uang tunai yang diterima belum diisi. Masukkan nominal uang yang diterima atau klik Uang Pas.',
         ]);
     }
 }

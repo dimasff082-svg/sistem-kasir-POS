@@ -143,10 +143,11 @@
 
                 <div id="billTenderedWrapper" class="space-y-2">
                     <label class="block text-xs font-bold text-slate-700">Nominal Uang Diterima (Rp) *</label>
-                    <input type="number" id="billInputTendered" name="amount_tendered" step="500" min="0"
-                        placeholder="Ketik nominal uang yang diterima dari pelanggan..."
-                        oninput="calculateBillChange()"
+                    <input type="text" id="billInputTendered" inputmode="numeric"
+                        placeholder="Ketik nominal uang yang diterima dari pelanggan (contoh: 60.000)..."
+                        oninput="handleBillTenderedInput(this)"
                         class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 text-lg font-black text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <input type="hidden" id="rawBillAmountTendered" name="amount_tendered" value="">
 
                     <div class="flex items-center justify-between text-xs pt-1">
                         <span class="text-slate-500 font-semibold">Uang Kembalian:</span>
@@ -160,6 +161,13 @@
                             </svg>
                             <span>Uang Pas (Rp {{ number_format($openBill->total_amount, 0, ',', '.') }})</span>
                         </button>
+                        
+                        <div class="grid grid-cols-4 gap-1.5 text-xs font-bold text-slate-700">
+                            <button type="button" onclick="setBillPresetAmount(10000)" class="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">10.000</button>
+                            <button type="button" onclick="setBillPresetAmount(20000)" class="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">20.000</button>
+                            <button type="button" onclick="setBillPresetAmount(50000)" class="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">50.000</button>
+                            <button type="button" onclick="setBillPresetAmount(100000)" class="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 transition">100.000</button>
+                        </div>
                     </div>
                 </div>
 
@@ -174,30 +182,52 @@
         <script>
             const billTotal = {{ (float)$openBill->total_amount }};
 
+            function getCleanNumericValue(str) {
+                if (!str) return 0;
+                const cleaned = String(str).replace(/[^\d]/g, '');
+                return cleaned ? parseInt(cleaned, 10) : 0;
+            }
+
+            function handleBillTenderedInput(inputEl) {
+                const raw = getCleanNumericValue(inputEl.value);
+                if (raw > 0) {
+                    inputEl.value = Number(raw).toLocaleString('id-ID');
+                    document.getElementById('rawBillAmountTendered').value = raw;
+                } else {
+                    inputEl.value = '';
+                    document.getElementById('rawBillAmountTendered').value = '';
+                }
+                calculateBillChange();
+            }
+
             function toggleBillTendered(isCash) {
                 const wrapper = document.getElementById('billTenderedWrapper');
                 if (isCash) {
                     wrapper.classList.remove('hidden');
                     document.getElementById('billInputTendered').value = '';
+                    document.getElementById('rawBillAmountTendered').value = '';
                     document.getElementById('billLabelChange').innerText = "Rp 0";
                 } else {
                     wrapper.classList.add('hidden');
-                    document.getElementById('billInputTendered').value = billTotal;
+                    document.getElementById('billInputTendered').value = Number(billTotal).toLocaleString('id-ID');
+                    document.getElementById('rawBillAmountTendered').value = billTotal;
                 }
             }
 
             function setBillExactAmount() {
-                document.getElementById('billInputTendered').value = billTotal;
+                document.getElementById('billInputTendered').value = Number(billTotal).toLocaleString('id-ID');
+                document.getElementById('rawBillAmountTendered').value = billTotal;
+                calculateBillChange();
+            }
+
+            function setBillPresetAmount(amount) {
+                document.getElementById('billInputTendered').value = Number(amount).toLocaleString('id-ID');
+                document.getElementById('rawBillAmountTendered').value = amount;
                 calculateBillChange();
             }
 
             function calculateBillChange() {
-                const tenderedStr = document.getElementById('billInputTendered').value;
-                if (!tenderedStr) {
-                    document.getElementById('billLabelChange').innerText = "Rp 0";
-                    return;
-                }
-                const val = parseFloat(tenderedStr) || 0;
+                const val = getCleanNumericValue(document.getElementById('billInputTendered').value);
                 const change = Math.max(0, val - billTotal);
                 document.getElementById('billLabelChange').innerText = "Rp " + new Intl.NumberFormat('id-ID').format(change);
             }

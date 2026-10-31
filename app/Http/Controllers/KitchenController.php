@@ -66,8 +66,8 @@ class KitchenController extends Controller
     {
         $user = $request->user();
 
-        // Verifikasi hak akses: Kitchen atau Admin (Kasir tidak memiliki akses dapur)
-        if (! $user->isKitchen() && ! $user->isAdmin()) {
+        // Verifikasi hak akses: Kitchen, Admin, atau Kasir
+        if (! $user->isKitchen() && ! $user->isAdmin() && ! $user->isCashier()) {
             abort(403, 'Akses ditolak.');
         }
 

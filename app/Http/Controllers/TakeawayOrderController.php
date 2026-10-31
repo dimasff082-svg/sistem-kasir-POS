@@ -64,8 +64,22 @@ class TakeawayOrderController extends Controller
             'payment_method.required' => 'Pilih metode pembayaran (Tunai, QRIS, atau Transfer).',
         ]);
 
+        $method = $validated['payment_method'];
+
+        // Jika pembayaran Tunai, nominal uang yang diterima WAJIB diisi
+        if ($method === 'cash' && (! isset($validated['amount_tendered']) || (float) $validated['amount_tendered'] <= 0)) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Uang tunai yang diterima belum diisi. Masukkan nominal uang yang diterima atau klik Uang Pas.',
+                ], 422);
+            }
+
+            return back()->withInput()->withErrors(['amount_tendered' => 'Uang tunai yang diterima belum diisi.']);
+        }
+
         try {
-            $sale = DB::transaction(function () use ($validated, $user) {
+            $sale = DB::transaction(function () use ($validated, $user, $method) {
                 $itemIds = array_column($validated['items'], 'id');
                 $products = Product::whereIn('id', $itemIds)->lockForUpdate()->get()->keyBy('id');
 
@@ -107,14 +121,16 @@ class TakeawayOrderController extends Controller
                     $orderNumber = sprintf('TKW%03d', $todayCount);
                 }
 
-                $method = $validated['payment_method'];
                 $totalAmount = $subtotal;
-                $tendered = isset($validated['amount_tendered']) && $validated['amount_tendered'] > 0
-                    ? (float) $validated['amount_tendered']
-                    : $totalAmount;
-
-                if ($method === 'cash' && $tendered < $totalAmount) {
-                    throw new Exception('Uang yang diterima kurang dari total tagihan (Rp '.number_format($totalAmount, 0, ',', '.').').');
+                if ($method === 'cash') {
+                    $tendered = (float) $validated['amount_tendered'];
+                    if ($tendered < $totalAmount) {
+                        throw new Exception('Uang tunai yang diterima kurang dari total tagihan (Rp '.number_format($totalAmount, 0, ',', '.').').');
+                    }
+                } else {
+                    $tendered = isset($validated['amount_tendered']) && $validated['amount_tendered'] > 0
+                        ? (float) $validated['amount_tendered']
+                        : $totalAmount;
                 }
 
                 $changeAmount = $method === 'cash' ? max(0, $tendered - $totalAmount) : 0;

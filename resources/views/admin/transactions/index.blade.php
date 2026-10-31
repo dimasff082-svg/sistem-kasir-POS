@@ -118,6 +118,10 @@
                                             <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                             Open Bill ({{ $sale->orders_count }} Pesanan)
                                         </span>
+                                    @elseif($sale->is_takeaway || $sale->badge_label === 'Takeaway' || $sale->table_number === 'TAKEAWAY' || str_contains($sale->table_number ?? '', 'Takeaway'))
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-300 shadow-2xs">
+                                            🛍️ Takeaway
+                                        </span>
                                     @else
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#f0ebd9] text-[#786e60]">
                                             Reguler
@@ -129,7 +133,15 @@
                                 {{ $sale->transaction_date->format('d/m/Y H:i') }}
                             </td>
                             <td class="py-4 px-6 text-xs text-[#262017]">
-                                <span class="font-bold block">{{ $sale->table_number ? 'Meja ' . $sale->table_number : 'Non-Meja' }}</span>
+                                <span class="font-bold block">
+                                    @if($sale->is_takeaway || $sale->badge_label === 'Takeaway' || $sale->table_number === 'TAKEAWAY' || str_contains($sale->table_number ?? '', 'Takeaway'))
+                                        🛍️ Bawa Pulang
+                                    @elseif($sale->table_number)
+                                        {{ str_starts_with($sale->table_number, 'Meja') ? $sale->table_number : 'Meja ' . $sale->table_number }}
+                                    @else
+                                        Non-Meja
+                                    @endif
+                                </span>
                                 <span class="text-[11px] text-[#8c8273]">{{ $sale->customer_name ?: 'Pelanggan Walk-in' }}</span>
                             </td>
                             <td class="py-4 px-6 text-xs font-bold text-[#262017]">

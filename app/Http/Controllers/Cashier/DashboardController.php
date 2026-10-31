@@ -103,6 +103,11 @@ class DashboardController extends Controller
             return back()->with('info', "Pesanan {$sale->transaction_number} sudah berstatus LUNAS sebelumnya.");
         }
 
+        if ($request->has('amount_tendered') && is_string($request->input('amount_tendered'))) {
+            $cleaned = preg_replace('/[^\d]/', '', $request->input('amount_tendered'));
+            $request->merge(['amount_tendered' => $cleaned !== '' ? (float) $cleaned : null]);
+        }
+
         $validated = $request->validate([
             'payment_method' => ['nullable', 'string', 'in:cash,transfer,qris'],
             'amount_tendered' => ['nullable', 'numeric', 'min:0'],

@@ -188,6 +188,11 @@ class OpenBillController extends Controller
             return back()->with('info', "Tagihan Open Bill {$openBill->bill_number} sudah lunas.");
         }
 
+        if ($request->has('amount_tendered') && is_string($request->input('amount_tendered'))) {
+            $cleaned = preg_replace('/[^\d]/', '', $request->input('amount_tendered'));
+            $request->merge(['amount_tendered' => $cleaned !== '' ? (float) $cleaned : null]);
+        }
+
         $validated = $request->validate([
             'payment_method' => ['nullable', 'string', 'in:cash,transfer,qris'],
             'amount_tendered' => ['nullable', 'numeric', 'min:0'],

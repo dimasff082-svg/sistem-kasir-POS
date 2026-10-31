@@ -15,7 +15,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                             Operasional Resto
                         </span>
-                        <span class="text-[11px] text-[#b3a895] font-semibold">Kasir Langsung</span>
+                        <span class="text-[11px] text-[#b3a895] font-semibold">Kasir Langsung (Takeaway)</span>
                     </div>
                     <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight font-serif-classic text-[#f5ebd7]">
                         Pesanan Bawa Pulang (Takeaway)
@@ -27,8 +27,15 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <button type="button" onclick="resetTakeawayCart()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2e2922] hover:bg-[#3b342b] text-[#f2ece1] text-xs font-bold border border-[#4a4235] transition shadow-xs">
+                <a href="{{ auth()->user()->isAdmin() ? route('admin.transactions.index') : route('cashier.transactions.index') }}"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2e2922] hover:bg-[#3b342b] text-[#f2ece1] text-xs font-bold border border-[#4a4235] transition shadow-xs">
                     <svg class="w-4 h-4 text-[#c59b27]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Riwayat Transaksi Lunas
+                </a>
+                <button type="button" onclick="resetTakeawayCart()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-stone-200 text-xs font-bold border border-white/10 transition shadow-xs">
+                    <svg class="w-4 h-4 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     Reset Form
@@ -131,13 +138,31 @@
                                     </span>
                                 </div>
 
-                                <button type="button" onclick="addToTakeawayCart({{ $product->id }}, '{{ addslashes($product->name) }}', {{ (float)$product->selling_price }})"
-                                    class="w-8 h-8 rounded-xl bg-[#c59b27] hover:bg-[#a87f1c] active:scale-95 text-stone-950 font-black flex items-center justify-center transition shadow-xs shrink-0"
-                                    title="Tambah ke Pesanan">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                </button>
+                                <!-- Action Buttons: Add & Qty Counter -->
+                                <div id="card-action-{{ $product->id }}" class="shrink-0">
+                                    <button type="button" id="btn-add-{{ $product->id }}"
+                                        onclick="addToTakeawayCart({{ $product->id }}, '{{ addslashes($product->name) }}', {{ (float)$product->selling_price }})"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#c59b27] hover:bg-[#a87f1c] active:scale-95 text-stone-950 font-black text-xs transition shadow-xs"
+                                        title="Tambah ke Pesanan">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                        <span>Tambah</span>
+                                    </button>
+                                    <div id="counter-{{ $product->id }}" class="hidden items-center gap-1 bg-[#faf7f0] border border-[#c59b27] rounded-xl p-0.5 shadow-2xs">
+                                        <button type="button" onclick="updateCartItemQty({{ $product->id }}, -1)"
+                                            class="w-6 h-6 rounded-lg bg-white text-[#2c261e] border border-[#dcd4c5] flex items-center justify-center font-bold text-xs hover:bg-[#ede7da]">
+                                            -
+                                        </button>
+                                        <span id="qty-{{ $product->id }}" class="font-black text-xs text-stone-950 px-1 min-w-[1.25rem] text-center">
+                                            0
+                                        </span>
+                                        <button type="button" onclick="updateCartItemQty({{ $product->id }}, 1)"
+                                            class="w-6 h-6 rounded-lg bg-[#c59b27] text-stone-950 flex items-center justify-center font-bold text-xs hover:bg-[#a87f1c]">
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -191,13 +216,16 @@
                 </div>
 
                 <!-- Cart Items Container -->
-                <div class="p-4 max-h-[300px] overflow-y-auto space-y-2.5 divide-y divide-[#f0e8db]" id="cartItemsList">
-                    <!-- Dynamic Cart Items Injected Here -->
+                <div class="p-4 max-h-[340px] overflow-y-auto">
+                    <!-- Cart Empty State (Permanent element, hidden when has items) -->
                     <div id="cartEmptyState" class="py-12 text-center text-[#8f8573]">
                         <span class="text-4xl block mb-2">🛍️</span>
                         <p class="text-xs font-bold text-[#26211a]">Keranjang Masih Kosong</p>
                         <p class="text-[11px] text-[#8f8573] mt-0.5">Pilih menu dari katalog di sebelah kiri untuk membuat pesanan.</p>
                     </div>
+
+                    <!-- Dynamic Cart Item List (Injected here) -->
+                    <div id="cartItemsList" class="space-y-2.5 divide-y divide-[#f0e8db]"></div>
                 </div>
 
                 <!-- Payment Details Section -->
@@ -246,29 +274,34 @@
                         <div>
                             <div class="flex items-center justify-between mb-1">
                                 <label class="text-[11px] font-bold uppercase tracking-wider text-[#6b6252]">
-                                    Uang Diterima (Tunai)
+                                    Uang Diterima (Tunai) <span class="text-rose-600">*</span>
                                 </label>
-                                <button type="button" onclick="setExactAmount()" class="text-[10px] font-extrabold text-[#a87f1c] hover:underline">
+                                <button type="button" onclick="setExactAmount()" class="text-[10px] font-extrabold text-[#a87f1c] hover:underline cursor-pointer">
                                     ⚡ Uang Pas
                                 </button>
                             </div>
-                            <input type="number" id="amountTenderedInput" oninput="calculateChange()" placeholder="Masukkan nominal rupiah..."
-                                class="w-full px-3.5 py-2.5 rounded-xl border border-[#dcd4c5] bg-white text-sm font-black text-[#2c261e] focus:outline-none focus:ring-2 focus:ring-[#c59b27]" />
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-xs font-bold text-[#8f8573]">
+                                    Rp
+                                </span>
+                                <input type="text" id="amountTenderedInput" inputmode="numeric" oninput="formatRupiahInput(this)" placeholder="0"
+                                    class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-[#dcd4c5] bg-white text-sm font-black text-[#2c261e] focus:outline-none focus:ring-2 focus:ring-[#c59b27]" />
+                            </div>
                         </div>
 
                         <!-- Quick Denomination Buttons -->
                         <div class="grid grid-cols-4 gap-1.5">
                             <button type="button" onclick="setCashTendered(10000)" class="py-1 rounded-lg bg-white hover:bg-[#ede7da] border border-[#dcd4c5] text-[10px] font-bold text-[#2c261e]">
-                                10k
+                                10.000
                             </button>
                             <button type="button" onclick="setCashTendered(20000)" class="py-1 rounded-lg bg-white hover:bg-[#ede7da] border border-[#dcd4c5] text-[10px] font-bold text-[#2c261e]">
-                                20k
+                                20.000
                             </button>
                             <button type="button" onclick="setCashTendered(50000)" class="py-1 rounded-lg bg-white hover:bg-[#ede7da] border border-[#dcd4c5] text-[10px] font-bold text-[#2c261e]">
-                                50k
+                                50.000
                             </button>
                             <button type="button" onclick="setCashTendered(100000)" class="py-1 rounded-lg bg-white hover:bg-[#ede7da] border border-[#dcd4c5] text-[10px] font-bold text-[#2c261e]">
-                                100k
+                                100.000
                             </button>
                         </div>
 
@@ -381,6 +414,13 @@
                 </svg>
                 Cetak Struk Pembelian
             </a>
+            <a href="{{ auth()->user()->isAdmin() ? route('admin.transactions.index') : route('cashier.transactions.index') }}"
+                class="w-full py-2 px-4 rounded-xl bg-[#2e2922] hover:bg-[#3d362c] text-[#f2ece1] text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
+                <svg class="w-4 h-4 text-[#c59b27]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Lihat di Riwayat Transaksi Lunas
+            </a>
             <button type="button" onclick="closeSuccessModalAndReset()"
                 class="w-full py-2 px-4 rounded-xl bg-white hover:bg-[#ede7da] border border-[#dcd4c5] text-xs font-bold text-[#2c261e] transition">
                 Tutup & Transaksi Baru
@@ -393,11 +433,28 @@
 @push('scripts')
 <script>
     // State Keranjang Takeaway
-    let takeawayCart = {}; // { [productId]: { id, name, price, qty, notes } }
+    let takeawayCart = {}; // { [productId]: { id, name, price, quantity, notes } }
     let activeCategoryFilter = 'all';
 
     function formatRupiah(number) {
         return 'Rp ' + Number(number || 0).toLocaleString('id-ID');
+    }
+
+    // Format titik otomatis saat kasir mengetik nominal uang tunai
+    function formatRupiahInput(input) {
+        let val = input.value.replace(/\D/g, '');
+        if (val === '') {
+            input.value = '';
+        } else {
+            input.value = Number(val).toLocaleString('id-ID');
+        }
+        calculateChange();
+    }
+
+    // Ambil nilai angka mentah dari input uang yang diterima
+    function getRawAmountTendered() {
+        const val = document.getElementById('amountTenderedInput').value;
+        return parseInt(val.replace(/\D/g, ''), 10) || 0;
     }
 
     function selectCategory(catId) {
@@ -455,6 +512,7 @@
         } else {
             takeawayCart[id].quantity += 1;
         }
+        updateMenuCardUI(id);
         renderTakeawayCart();
     }
 
@@ -464,11 +522,13 @@
         if (takeawayCart[id].quantity <= 0) {
             delete takeawayCart[id];
         }
+        updateMenuCardUI(id);
         renderTakeawayCart();
     }
 
     function removeCartItem(id) {
         delete takeawayCart[id];
+        updateMenuCardUI(id);
         renderTakeawayCart();
     }
 
@@ -476,6 +536,36 @@
         if (takeawayCart[id]) {
             takeawayCart[id].notes = notes;
         }
+    }
+
+    // Sinkronkan tombol tambah & counter jumlah di kartu menu
+    function updateMenuCardUI(id) {
+        const btnAdd = document.getElementById(`btn-add-${id}`);
+        const counter = document.getElementById(`counter-${id}`);
+        const qtyText = document.getElementById(`qty-${id}`);
+
+        if (takeawayCart[id] && takeawayCart[id].quantity > 0) {
+            if (btnAdd) btnAdd.classList.add('hidden');
+            if (counter) {
+                counter.classList.remove('hidden');
+                counter.classList.add('inline-flex');
+            }
+            if (qtyText) qtyText.innerText = takeawayCart[id].quantity;
+        } else {
+            if (btnAdd) btnAdd.classList.remove('hidden');
+            if (counter) {
+                counter.classList.add('hidden');
+                counter.classList.remove('inline-flex');
+            }
+            if (qtyText) qtyText.innerText = '0';
+        }
+    }
+
+    function updateAllMenuCardUIs() {
+        document.querySelectorAll('.product-card').forEach(card => {
+            const id = card.getAttribute('data-id');
+            updateMenuCardUI(id);
+        });
     }
 
     function getCartTotal() {
@@ -499,7 +589,6 @@
 
         if (items.length === 0) {
             container.innerHTML = '';
-            container.appendChild(emptyState);
             emptyState.classList.remove('hidden');
             calculateChange();
             return;
@@ -561,20 +650,19 @@
 
     function setExactAmount() {
         const total = getCartTotal();
-        document.getElementById('amountTenderedInput').value = total > 0 ? total : '';
+        document.getElementById('amountTenderedInput').value = total > 0 ? Number(total).toLocaleString('id-ID') : '';
         calculateChange();
     }
 
     function setCashTendered(amount) {
-        document.getElementById('amountTenderedInput').value = amount;
+        document.getElementById('amountTenderedInput').value = Number(amount).toLocaleString('id-ID');
         calculateChange();
     }
 
     function calculateChange() {
         const method = document.querySelector('input[name="payment_method"]:checked')?.value || 'cash';
         const total = getCartTotal();
-        const tenderedInput = document.getElementById('amountTenderedInput');
-        const tendered = Number(tenderedInput.value || 0);
+        const tendered = getRawAmountTendered();
         const changeDisp = document.getElementById('changeAmountDisplay');
 
         if (method !== 'cash') {
@@ -619,6 +707,7 @@
         document.getElementById('amountTenderedInput').value = '';
         document.querySelector('input[name="payment_method"][value="cash"]').checked = true;
         handlePaymentMethodChange();
+        updateAllMenuCardUIs();
         renderTakeawayCart();
         closeAlert();
     }
@@ -633,12 +722,22 @@
 
         const totalAmount = getCartTotal();
         const method = document.querySelector('input[name="payment_method"]:checked').value;
-        const tenderedVal = document.getElementById('amountTenderedInput').value;
-        const tendered = tenderedVal ? Number(tenderedVal) : totalAmount;
+        const rawTendered = getRawAmountTendered();
+        const tenderedVal = document.getElementById('amountTenderedInput').value.trim();
 
-        if (method === 'cash' && tendered < totalAmount) {
-            showAlert('Uang tunai yang diterima kurang dari total tagihan (' + formatRupiah(totalAmount) + ').', 'error');
-            return;
+        // Validasi wajib untuk Tunai: kolom tidak boleh kosong dan harus >= total tagihan
+        if (method === 'cash') {
+            if (!tenderedVal || rawTendered <= 0) {
+                showAlert('Uang tunai yang diterima belum diisi. Masukkan nominal uang yang diterima atau klik tombol Uang Pas.', 'error');
+                document.getElementById('amountTenderedInput').focus();
+                return;
+            }
+
+            if (rawTendered < totalAmount) {
+                showAlert('Uang tunai yang diterima kurang dari total tagihan (' + formatRupiah(totalAmount) + ').', 'error');
+                document.getElementById('amountTenderedInput').focus();
+                return;
+            }
         }
 
         const customerName = (document.getElementById('customerNameInput').value || '').trim();
@@ -668,7 +767,7 @@
                     customer_name: customerName,
                     notes: notes,
                     payment_method: method,
-                    amount_tendered: method === 'cash' ? tendered : totalAmount,
+                    amount_tendered: method === 'cash' ? rawTendered : totalAmount,
                     items: items.map(it => ({
                         id: it.id,
                         quantity: it.quantity,
@@ -700,8 +799,7 @@
     function closeSuccessModalAndReset() {
         document.getElementById('successModal').classList.add('hidden');
         resetTakeawayCart();
-        window.location.reload();
+        window.location.href = "{{ route('takeaway.index') }}";
     }
 </script>
 @endpush
-
