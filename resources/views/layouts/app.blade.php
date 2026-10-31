@@ -44,16 +44,12 @@
     <div class="min-h-full flex relative">
         <!-- Sidebar Navigation (Classic Modern Theme) -->
         <aside id="app-sidebar" class="w-64 bg-[#191714] text-[#d6cfc2] flex flex-col shrink-0 border-r border-[#2b261f] shadow-2xl transition-all duration-300 ease-in-out z-40">
-            <!-- Brand Header: Classic Emblem without "sistem kasir Point of sale" text -->
-            <div class="h-16 flex items-center px-6 gap-3 bg-[#12110e] border-b border-[#2b261f]">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#c59b27] via-[#a87f1c] to-[#73550b] flex items-center justify-center text-[#181305] shadow-md shadow-black/50 border border-[#e5be58]/40">
-                    <svg class="w-5 h-5 text-stone-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                </div>
-                <div>
-                    <span class="font-cinzel font-bold text-xs tracking-[0.2em] text-[#e8c872] block">ESTABLISHED</span>
-                    <span class="text-[10px] tracking-widest uppercase font-semibold text-[#8f8573]">PREMIUM TOKO</span>
+            <!-- Brand Header: Fira Cake Logo -->
+            <div class="h-16 flex items-center px-5 gap-3 bg-[#12110e] border-b border-[#2b261f]">
+                <img src="{{ asset('images/logo.png') }}" alt="Fira Cake" class="w-9 h-9 object-contain drop-shadow-md shrink-0">
+                <div class="overflow-hidden">
+                    <span class="font-serif-classic font-bold text-sm tracking-wide text-[#f2ece1] block truncate">Fira Cake</span>
+                    <span class="text-[9px] tracking-widest uppercase font-semibold text-[#c59b27] block">Bakery & Pastry</span>
                 </div>
             </div>
 
@@ -116,6 +112,10 @@
                     </a>
 
                     <div class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Operasional Resto</div>
+                    <a href="{{ route('takeaway.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('takeaway.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <span class="text-base leading-none">🛍️</span>
+                        Pesanan Bawa Pulang (Takeaway)
+                    </a>
                     <a href="{{ route('cashier.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('cashier.dashboard') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -179,7 +179,11 @@
 
                 @else
                     <!-- Cashier Navigation: No manual POS menu & No Kitchen for Cashier -->
-                    <div class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Kasir Restoran</div>
+                    <div class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Operasional Resto</div>
+                    <a href="{{ route('takeaway.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('takeaway.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <span class="text-base leading-none">🛍️</span>
+                        Pesanan Bawa Pulang (Takeaway)
+                    </a>
                     <a href="{{ route('cashier.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('cashier.dashboard') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -192,6 +196,7 @@
                         </svg>
                         Kelola Open Bill Meja
                     </a>
+                    <div class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Audit & Penjualan</div>
                     <a href="{{ route('cashier.transactions.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('cashier.transactions.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -232,17 +237,12 @@
                         </svg>
                     </button>
 
-                    <!-- Shopping bag logo -->
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#c59b27] via-[#a87f1c] to-[#73550b] flex items-center justify-center text-stone-950 shadow-sm border border-[#e5be58]/50">
-                        <svg class="w-5 h-5 text-amber-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                    </div>
+                    <!-- Fira Cake Logo -->
+                    <img src="{{ asset('images/logo.png') }}" alt="Fira Cake" class="w-9 h-9 object-contain drop-shadow-sm shrink-0">
                     <div>
                         <div class="flex items-center gap-2">
-                            <!-- Point of sale text in classic modern typography -->
-                            <span class="font-serif-classic font-extrabold text-lg text-[#26211a] tracking-tight">Point of Sale</span>
-                            <span class="text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-[#f4ece0] text-[#8a681c] border border-[#dfb15b]/30">Modern Classic</span>
+                            <span class="font-serif-classic font-extrabold text-lg text-[#26211a] tracking-tight">Fira Cake</span>
+                            <span class="text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-[#f4ece0] text-[#8a681c] border border-[#dfb15b]/30">Resto & Bakery</span>
                         </div>
                         <p class="text-[11px] text-[#7d7363] font-medium leading-tight">{{ $header ?? 'Panel Kasir Toko' }}</p>
                     </div>

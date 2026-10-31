@@ -54,23 +54,21 @@ class DashboardController extends Controller
 
         $sales = $query->paginate(15)->withQueryString();
 
-        // Statistik hari ini untuk terminal kasir
+        // Statistik hari ini untuk terminal kasir (dioptimalkan dalam 1 query gabungan)
         $today = now()->toDateString();
-        $unpaidCount = Sale::where('payment_status', 'unpaid')
-            ->whereDate('transaction_date', $today)
-            ->count();
+        $stats = Sale::whereDate('transaction_date', $today)
+            ->selectRaw("
+                SUM(CASE WHEN payment_status = 'unpaid' THEN 1 ELSE 0 END) as unpaid_count,
+                SUM(CASE WHEN payment_status = 'unpaid' THEN total_amount ELSE 0 END) as unpaid_total,
+                SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END) as paid_count,
+                SUM(CASE WHEN payment_status = 'paid' THEN total_amount ELSE 0 END) as paid_total
+            ")
+            ->first();
 
-        $unpaidTotal = Sale::where('payment_status', 'unpaid')
-            ->whereDate('transaction_date', $today)
-            ->sum('total_amount');
-
-        $paidCount = Sale::where('payment_status', 'paid')
-            ->whereDate('transaction_date', $today)
-            ->count();
-
-        $paidTotal = Sale::where('payment_status', 'paid')
-            ->whereDate('transaction_date', $today)
-            ->sum('total_amount');
+        $unpaidCount = (int) ($stats->unpaid_count ?? 0);
+        $unpaidTotal = (float) ($stats->unpaid_total ?? 0);
+        $paidCount = (int) ($stats->paid_count ?? 0);
+        $paidTotal = (float) ($stats->paid_total ?? 0);
 
         $tables = RestaurantTable::orderBy('table_number')->get();
         $activeOpenBillsCount = OpenBill::where('status', 'open')->count();

@@ -90,10 +90,16 @@
                         <!-- Header Kartu -->
                         <div class="flex items-start justify-between gap-2 pb-3 border-b border-slate-100">
                             <div>
-                                <span class="text-xl font-black text-slate-900 tracking-tight block">
-                                    {{ $order->table_number ?? 'Meja M001' }}
-                                </span>
-                                <span class="font-mono text-xs font-bold text-indigo-700">
+                                @if($order->table_number === 'TAKEAWAY')
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-black bg-purple-100 text-purple-900 border border-purple-300 shadow-2xs mb-1">
+                                        🛍️ BAWA PULANG (TAKEAWAY)
+                                    </span>
+                                @else
+                                    <span class="text-xl font-black text-slate-900 tracking-tight block">
+                                        {{ $order->table_number ?? 'Meja M001' }}
+                                    </span>
+                                @endif
+                                <span class="font-mono text-xs font-bold text-indigo-700 block">
                                     {{ $order->transaction_number }}
                                 </span>
                             </div>

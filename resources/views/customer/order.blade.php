@@ -21,11 +21,9 @@
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 shadow-2xs">
         <div class="max-w-2xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center font-serif-resto font-black text-lg shadow-md shadow-amber-600/20">
-                    CR
-                </div>
+                <img src="{{ asset('images/logo.png') }}" alt="Fira Cake" class="w-10 h-10 object-contain drop-shadow-sm shrink-0">
                 <div>
-                    <h1 class="text-sm font-extrabold text-slate-900 leading-tight">CAFE & RESTO</h1>
+                    <h1 class="text-sm font-extrabold text-slate-900 leading-tight">Fira Cake</h1>
                     <p class="text-[11px] text-slate-400">Pemesanan Mandiri Pelanggan</p>
                 </div>
             </div>
@@ -303,11 +301,9 @@
                                             <h4 class="font-bold text-slate-900 text-sm leading-snug line-clamp-1">{{ $product->name }}</h4>
                                             <span class="text-[10px] text-slate-400 font-mono shrink-0">{{ $product->sku }}</span>
                                         </div>
-                                        @if($product->category)
-                                            <span class="inline-block mt-0.5 text-[9px] text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded font-medium border border-amber-200/60">
-                                                {{ $product->category->name }}
-                                            </span>
-                                        @endif
+                                        <span class="inline-block mt-0.5 text-[9px] text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded font-medium border border-amber-200/60">
+                                            {{ $category->name }}
+                                        </span>
                                     </div>
 
                                     <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">

@@ -201,4 +201,3 @@ class TransactionHistoryService
         return $paginator;
     }
 }
-

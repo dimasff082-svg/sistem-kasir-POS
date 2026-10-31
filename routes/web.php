@@ -16,6 +16,7 @@ use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\Owner\DashboardController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\PosController;
+use App\Http\Controllers\TakeawayOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -82,6 +83,12 @@ Route::middleware(['auth', 'role:cashier,admin,owner'])->prefix('cashier')->name
 Route::middleware(['auth', 'role:kitchen,admin'])->prefix('kitchen')->name('kitchen.')->group(function () {
     Route::get('/', [KitchenController::class, 'index'])->name('index');
     Route::patch('/orders/{sale}/status', [KitchenController::class, 'updateStatus'])->name('orders.status');
+});
+
+// Takeaway Routes (Pesanan Bawa Pulang Langsung di Kasir & Admin)
+Route::middleware(['auth', 'role:cashier,admin'])->prefix('takeaway')->name('takeaway.')->group(function () {
+    Route::get('/', [TakeawayOrderController::class, 'index'])->name('index');
+    Route::post('/checkout', [TakeawayOrderController::class, 'checkout'])->name('checkout');
 });
 
 // POS Routes (Kasir diarahkan ke Dashboard Kasir)

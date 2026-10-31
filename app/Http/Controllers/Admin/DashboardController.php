@@ -16,20 +16,21 @@ class DashboardController extends Controller
     {
         $today = now()->toDateString();
 
-        $salesToday = Sale::where('status', 'completed')
+        $todaySummary = Sale::where('status', 'completed')
             ->whereDate('transaction_date', $today)
-            ->sum('total_amount');
+            ->selectRaw('SUM(total_amount) as total_sales, COUNT(*) as total_trx')
+            ->first();
 
-        $trxTodayCount = Sale::where('status', 'completed')
-            ->whereDate('transaction_date', $today)
-            ->count();
+        $salesToday = (float) ($todaySummary->total_sales ?? 0);
+        $trxTodayCount = (int) ($todaySummary->total_trx ?? 0);
 
         $activeProductsCount = Product::active()->count();
 
-        $tablesCount = RestaurantTable::count();
-        $occupiedTablesCount = RestaurantTable::where('status', 'occupied')->count();
+        $tableStats = RestaurantTable::selectRaw("COUNT(*) as total_tables, SUM(CASE WHEN status = 'occupied' THEN 1 ELSE 0 END) as occupied_tables")->first();
+        $tablesCount = (int) ($tableStats->total_tables ?? 0);
+        $occupiedTablesCount = (int) ($tableStats->occupied_tables ?? 0);
 
-        $recentSales = Sale::with(['user', 'payment'])
+        $recentSales = Sale::with(['user', 'confirmer', 'payment'])
             ->latest()
             ->limit(6)
             ->get();

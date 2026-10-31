@@ -16,15 +16,13 @@
 </head>
 <body class="h-full flex items-center justify-center p-6 bg-[#161412] text-[#f2ece1]">
     <div class="w-full max-w-md">
-        <!-- Brand Header: Classic Modern with Shopping Bag Crest -->
+        <!-- Brand Header: Fira Cake Official Logo -->
         <div class="text-center mb-8">
-            <div class="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-br from-[#c59b27] via-[#9e791b] to-[#6e5108] items-center justify-center text-stone-950 shadow-2xl shadow-black/80 mb-3 border border-[#e5be58]/50">
-                <svg class="w-8 h-8 text-amber-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
+            <div class="inline-flex items-center justify-center mb-3">
+                <img src="{{ asset('images/logo.png') }}" alt="Fira Cake" class="w-24 h-24 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-300">
             </div>
-            <h1 class="text-2xl font-serif-classic font-bold tracking-tight text-[#f5ebd7]">Point of Sale</h1>
-            <p class="text-xs uppercase font-cinzel tracking-[0.25em] text-[#c59b27] mt-1">Sistem Kasir Klasik Modern</p>
+            <h1 class="text-2xl font-serif-classic font-bold tracking-tight text-[#f5ebd7]">Fira Cake</h1>
+            <p class="text-xs uppercase font-cinzel tracking-[0.25em] text-[#c59b27] mt-1">Bakery & Pastry • Sistem Kasir</p>
         </div>
 
         <!-- Login Card -->

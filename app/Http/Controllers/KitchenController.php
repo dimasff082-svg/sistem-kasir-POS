@@ -41,10 +41,18 @@ class KitchenController extends Controller
 
         $orders = $query->get();
 
+        $statusSummary = (clone $kitchenBaseQuery)
+            ->selectRaw("
+                SUM(CASE WHEN order_status = 'pending' THEN 1 ELSE 0 END) as pending_count,
+                SUM(CASE WHEN order_status = 'processing' THEN 1 ELSE 0 END) as processing_count,
+                SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) as completed_count
+            ")
+            ->first();
+
         $counts = [
-            'pending' => (clone $kitchenBaseQuery)->where('order_status', 'pending')->count(),
-            'processing' => (clone $kitchenBaseQuery)->where('order_status', 'processing')->count(),
-            'completed' => (clone $kitchenBaseQuery)->where('order_status', 'completed')->count(),
+            'pending' => (int) ($statusSummary->pending_count ?? 0),
+            'processing' => (int) ($statusSummary->processing_count ?? 0),
+            'completed' => (int) ($statusSummary->completed_count ?? 0),
         ];
 
         return view('kitchen.index', compact('orders', 'counts', 'statusFilter'));

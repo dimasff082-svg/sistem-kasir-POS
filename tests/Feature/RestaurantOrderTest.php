@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -1008,6 +1009,9 @@ class RestaurantOrderTest extends TestCase
         $resTableAfter->assertSee('35.000');
 
         // Pelunasan seluruh open bill secara online (Midtrans)
+        Http::fake([
+            '*midtrans*' => Http::response(['token' => 'dummy-snap-token-123'], 201),
+        ]);
         $tokenRes = $this->post(route('order.open_bill_snap_token', 'M001'));
         $tokenRes->assertOk();
         $this->assertNotEmpty($tokenRes->json('token'));
@@ -1189,168 +1193,132 @@ class RestaurantOrderTest extends TestCase
         $responseCashier->assertSee('ORD-REG-01');
     }
 
-    public function test_customer_order_is_attributed_to_active_cashier(): void
+    public function test_takeaway_page_can_be_accessed_by_cashier_and_admin_but_forbidden_for_kitchen_and_guest(): void
     {
-        // 1. Simulasikan sesi kasir aktif di tabel database sessions
-        \Illuminate\Support\Facades\DB::table('sessions')->insert([
-            'id' => 'session-cashier-test-id',
-            'user_id' => $this->cashier->id,
-            'ip_address' => '127.0.0.1',
-            'user_agent' => 'PHPUnit Browser',
-            'payload' => serialize(['test' => true]),
-            'last_activity' => time(),
-        ]);
+        // 1. Guest diarahkan ke login
+        $this->get(route('takeaway.index'))->assertRedirect(route('login'));
 
-        $this->assertEquals($this->cashier->id, User::getActiveCashierId());
+        // 2. Kitchen role dilarang (403)
+        $this->actingAs($this->kitchen)->get(route('takeaway.index'))->assertForbidden();
 
-        // 2. Pelanggan melakukan pemesanan mandiri via QR Code meja
-        $response = $this->post(route('order.checkout', 'M001'), [
-            'customer_name' => 'Budi Santoso',
-            'payment_choice' => 'cash',
-            'items' => [
-                ['id' => $this->food->id, 'quantity' => 1],
-            ],
-        ]);
+        // 3. Kasir dapat mengakses
+        $responseCashier = $this->actingAs($this->cashier)->get(route('takeaway.index'));
+        $responseCashier->assertOk();
+        $responseCashier->assertSee('Pesanan Bawa Pulang (Takeaway)');
+        $responseCashier->assertSee('Fira Cake');
 
-        $response->assertRedirect();
-        $sale = Sale::latest()->first();
-        $this->assertNotNull($sale);
-        // Transaksi harus tercatat pada kasir yang sedang aktif login
-        $this->assertEquals($this->cashier->id, $sale->user_id);
+        // 4. Admin dapat mengakses
+        $responseAdmin = $this->actingAs($this->admin)->get(route('takeaway.index'));
+        $responseAdmin->assertOk();
+        $responseAdmin->assertSee('Pesanan Bawa Pulang (Takeaway)');
     }
 
-    public function test_transaction_history_unifies_open_bill_into_single_row_with_label(): void
+    public function test_takeaway_order_can_be_checked_out_successfully_by_cashier(): void
     {
-        // 1. Buat Open Bill yang memiliki 2 pesanan berbeda
-        $openBill = OpenBill::create([
-            'bill_number' => 'BILL-20261029-UNIFY',
-            'table_number' => 'M001',
-            'customer_name' => 'Meja Rombongan',
-            'status' => 'paid',
-            'opened_by' => $this->cashier->id,
-            'closed_by' => $this->cashier->id,
-            'opened_at' => now()->subHour(),
-            'closed_at' => now(),
-            'total_amount' => 35000,
+        $payload = [
+            'customer_name' => 'Bapak Budi',
+            'notes' => 'Tolong bungkus rapi pakai kantong',
+            'payment_method' => 'cash',
+            'amount_tendered' => 60000,
+            'items' => [
+                [
+                    'id' => $this->food->id,
+                    'quantity' => 2,
+                    'notes' => 'Pedas',
+                ],
+                [
+                    'id' => $this->drink->id,
+                    'quantity' => 1,
+                    'notes' => 'Dingin',
+                ],
+            ],
+        ];
+
+        $expectedTotal = (2 * (float) $this->food->selling_price) + (1 * (float) $this->drink->selling_price);
+
+        $response = $this->actingAs($this->cashier)
+            ->postJson(route('takeaway.checkout'), $payload);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
         ]);
 
-        $sale1 = Sale::create([
-            'transaction_number' => 'ORD-SUB-01',
-            'table_number' => 'M001',
-            'customer_name' => 'Meja Rombongan',
+        // Verifikasi Sale tercatat di database
+        $this->assertDatabaseHas('sales', [
+            'table_number' => 'TAKEAWAY',
+            'customer_name' => 'Bapak Budi',
             'user_id' => $this->cashier->id,
-            'transaction_date' => now()->subMinutes(45),
-            'subtotal' => 25000,
-            'total_amount' => 25000,
-            'status' => 'completed',
-            'order_status' => 'completed',
-            'payment_status' => 'paid',
-            'open_bill_id' => $openBill->id,
             'confirmed_by' => $this->cashier->id,
-        ]);
-
-        SaleItem::create([
-            'sale_id' => $sale1->id,
-            'product_id' => $this->food->id,
-            'product_name_snapshot' => $this->food->name,
-            'sku_snapshot' => $this->food->sku,
-            'quantity' => 1,
-            'unit_price' => 25000,
-            'line_total' => 25000,
-        ]);
-
-        $sale2 = Sale::create([
-            'transaction_number' => 'ORD-SUB-02',
-            'table_number' => 'M001',
-            'customer_name' => 'Meja Rombongan',
-            'user_id' => $this->cashier->id,
-            'transaction_date' => now()->subMinutes(20),
-            'subtotal' => 10000,
-            'total_amount' => 10000,
-            'status' => 'completed',
-            'order_status' => 'completed',
             'payment_status' => 'paid',
-            'open_bill_id' => $openBill->id,
-            'confirmed_by' => $this->cashier->id,
-        ]);
-
-        SaleItem::create([
-            'sale_id' => $sale2->id,
-            'product_id' => $this->drink->id,
-            'product_name_snapshot' => $this->drink->name,
-            'sku_snapshot' => $this->drink->sku,
-            'quantity' => 2,
-            'unit_price' => 5000,
-            'line_total' => 10000,
-        ]);
-
-        Payment::create([
-            'sale_id' => $sale1->id,
-            'method' => 'cash',
-            'amount_paid' => 35000,
-            'amount_tendered' => 40000,
-            'change_amount' => 5000,
-            'status' => 'paid',
-            'paid_at' => now(),
-            'verified_by' => $this->cashier->id,
-        ]);
-
-        // 2. Buat transaksi reguler (bukan open bill)
-        $saleRegular = Sale::create([
-            'transaction_number' => 'ORD-REG-01',
-            'table_number' => 'M001',
-            'customer_name' => 'Pelanggan Cepat',
-            'user_id' => $this->cashier->id,
-            'transaction_date' => now(),
-            'subtotal' => 25000,
-            'total_amount' => 25000,
+            'order_status' => 'pending',
             'status' => 'completed',
-            'order_status' => 'completed',
+            'total_amount' => $expectedTotal,
+        ]);
+
+        // Verifikasi Payment tercatat
+        $sale = Sale::where('table_number', 'TAKEAWAY')->latest('id')->first();
+        $this->assertNotNull($sale);
+        $this->assertEquals($expectedTotal, (float) $sale->total_amount);
+        $this->assertEquals(60000 - $expectedTotal, (float) $sale->payment->change_amount);
+        $this->assertEquals('paid', $sale->payment->status);
+
+        // Verifikasi item detail
+        $this->assertCount(2, $sale->items);
+
+        // Verifikasi pesanan takeaway muncul di Layar Dapur (KDS)
+        $kitchenResponse = $this->actingAs($this->kitchen)->get(route('kitchen.index'));
+        $kitchenResponse->assertOk();
+        $kitchenResponse->assertSee($sale->transaction_number);
+        $kitchenResponse->assertSee('BAWA PULANG (TAKEAWAY)');
+    }
+
+    public function test_takeaway_order_can_be_checked_out_by_admin(): void
+    {
+        $payload = [
+            'customer_name' => 'Pelanggan Walk-in',
+            'payment_method' => 'qris',
+            'items' => [
+                [
+                    'id' => $this->food->id,
+                    'quantity' => 1,
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->admin)
+            ->postJson(route('takeaway.checkout'), $payload);
+
+        $response->assertOk();
+        $response->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('sales', [
+            'table_number' => 'TAKEAWAY',
+            'customer_name' => 'Pelanggan Walk-in',
+            'user_id' => $this->admin->id,
             'payment_status' => 'paid',
-            'open_bill_id' => null,
-            'confirmed_by' => $this->cashier->id,
         ]);
+    }
 
-        SaleItem::create([
-            'sale_id' => $saleRegular->id,
-            'product_id' => $this->food->id,
-            'product_name_snapshot' => $this->food->name,
-            'sku_snapshot' => $this->food->sku,
-            'quantity' => 1,
-            'unit_price' => 25000,
-            'line_total' => 25000,
+    public function test_takeaway_order_insufficient_cash_fails(): void
+    {
+        $payload = [
+            'payment_method' => 'cash',
+            'amount_tendered' => 1000, // Sengaja kurang dari total harga
+            'items' => [
+                [
+                    'id' => $this->food->id,
+                    'quantity' => 1,
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->cashier)
+            ->postJson(route('takeaway.checkout'), $payload);
+
+        $response->assertStatus(422);
+        $response->assertJson([
+            'success' => false,
         ]);
-
-        Payment::create([
-            'sale_id' => $saleRegular->id,
-            'method' => 'cash',
-            'amount_paid' => 25000,
-            'amount_tendered' => 25000,
-            'change_amount' => 0,
-            'status' => 'paid',
-            'paid_at' => now(),
-            'verified_by' => $this->cashier->id,
-        ]);
-
-        // 3. Admin membuka halaman riwayat transaksi
-        $responseAdmin = $this->actingAs($this->admin)->get(route('admin.transactions.index'));
-        $responseAdmin->assertOk();
-
-        // Riwayat Open Bill bersatu menjadi 1 transaksi (BILL-20261029-UNIFY) dengan label Open Bill
-        $responseAdmin->assertSee('BILL-20261029-UNIFY');
-        $responseAdmin->assertSee('Open Bill (2 Pesanan)');
-        // Menampilkan rincian sub-pesanan di dalam accordion Open Bill
-        $responseAdmin->assertSee('ORD-SUB-01');
-        $responseAdmin->assertSee('ORD-SUB-02');
-        // Transaksi reguler tetap tampil sebagai Reguler
-        $responseAdmin->assertSee('ORD-REG-01');
-        $responseAdmin->assertSee('Reguler');
-
-        // 4. Kasir membuka halaman riwayat transaksi
-        $responseCashier = $this->actingAs($this->cashier)->get(route('cashier.transactions.index'));
-        $responseCashier->assertOk();
-        $responseCashier->assertSee('BILL-20261029-UNIFY');
-        $responseCashier->assertSee('Open Bill (2 Pesanan)');
-        $responseCashier->assertSee('ORD-REG-01');
     }
 }

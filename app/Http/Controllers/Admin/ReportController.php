@@ -28,8 +28,11 @@ class ReportController extends Controller
             ->whereDate('transaction_date', '>=', $startDate)
             ->whereDate('transaction_date', '<=', $endDate);
 
-        $totalRevenue = (clone $salesQuery)->sum('total_amount');
-        $totalTransactions = (clone $salesQuery)->count();
+        $summary = (clone $salesQuery)
+            ->selectRaw('SUM(total_amount) as total_revenue, COUNT(*) as total_transactions')
+            ->first();
+        $totalRevenue = (float) ($summary->total_revenue ?? 0);
+        $totalTransactions = (int) ($summary->total_transactions ?? 0);
         $averageTransaction = $totalTransactions > 0 ? round($totalRevenue / $totalTransactions) : 0;
 
         // Total items sold
