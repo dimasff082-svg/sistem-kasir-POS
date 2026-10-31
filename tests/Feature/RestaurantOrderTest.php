@@ -780,14 +780,16 @@ class RestaurantOrderTest extends TestCase
         $resCreate->assertSee('Kategori Menu');
         $resCreate->assertSee('Nama Menu');
         $resCreate->assertSee('Harga Menu');
+        $resCreate->assertSee('Deskripsi Menu');
         $resCreate->assertSee('Foto Menu');
 
-        // Store menu with image
+        // Store menu with image and description
         $imageFile = UploadedFile::fake()->image('ayam_bakar.jpg', 600, 600);
         $postRes = $this->post(route('admin.products.store'), [
             'sku' => 'MNU-AYAM-01',
             'category_id' => $this->category->id,
             'name' => 'Ayam Bakar Madu',
+            'description' => 'Ayam bakar dengan baluran saus madu gurih manis khas resto.',
             'selling_price' => 32000,
             'image' => $imageFile,
         ]);
@@ -798,6 +800,7 @@ class RestaurantOrderTest extends TestCase
         $product = Product::where('sku', 'MNU-AYAM-01')->first();
         $this->assertNotNull($product);
         $this->assertNotNull($product->image);
+        $this->assertEquals('Ayam bakar dengan baluran saus madu gurih manis khas resto.', $product->description);
         $this->assertEquals(32000, (float) $product->selling_price);
         Storage::disk('public')->assertExists($product->image);
     }

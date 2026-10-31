@@ -22,6 +22,7 @@ class ProductFactory extends Factory
             'category_id' => Category::factory(),
             'sku' => 'MNU-'.fake()->unique()->numerify('#####'),
             'name' => fake()->words(3, true),
+            'description' => fake()->sentence(),
             'unit' => 'porsi',
             'selling_price' => fake()->numberBetween(10000, 75000),
             'is_active' => true,

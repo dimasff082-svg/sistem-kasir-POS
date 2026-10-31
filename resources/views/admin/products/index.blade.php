@@ -97,7 +97,10 @@
                                 {{ $product->sku }}
                             </td>
                             <td class="py-4 px-6 text-slate-900 font-bold">
-                                {{ $product->name }}
+                                <div>{{ $product->name }}</div>
+                                @if($product->description)
+                                    <p class="text-[11px] text-slate-500 font-normal line-clamp-1 mt-0.5" title="{{ $product->description }}">{{ $product->description }}</p>
+                                @endif
                             </td>
                             <td class="py-4 px-6 text-xs text-slate-600">
                                 <span class="inline-flex px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700">

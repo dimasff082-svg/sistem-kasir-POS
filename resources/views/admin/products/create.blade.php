@@ -64,6 +64,17 @@
                 </div>
             </div>
 
+            <!-- Deskripsi Menu -->
+            <div class="pt-2 border-t border-slate-100">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Deskripsi Menu</label>
+                <textarea name="description" rows="3" placeholder="Tuliskan deskripsi menu, bahan utama, rasa, atau catatan khusus untuk membantu kasir menjelaskan menu ke pelanggan..."
+                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#c59b27] focus:outline-none">{{ old('description') }}</textarea>
+                <p class="text-[11px] text-slate-400 mt-1">Deskripsi ini akan dibaca oleh kasir saat pelanggan menanyakan detail sajian menu.</p>
+                @error('description')
+                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- 5. Foto Menu -->
             <div class="pt-2 border-t border-slate-100 space-y-3">
                 <label class="block text-xs font-bold text-slate-700">Foto Menu</label>

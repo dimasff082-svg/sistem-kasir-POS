@@ -50,6 +50,7 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
             'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1000'],
             'selling_price' => ['required', 'numeric', 'min:0'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ], [
@@ -72,6 +73,7 @@ class ProductController extends Controller
             'category_id' => $validated['category_id'] ?? null,
             'sku' => strtoupper(trim($validated['sku'])),
             'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
             'unit' => 'porsi',
             'selling_price' => $validated['selling_price'],
             'image' => $imagePath,
@@ -94,6 +96,7 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'sku' => ['required', 'string', 'max:100', 'unique:products,sku,'.$product->id],
             'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1000'],
             'selling_price' => ['required', 'numeric', 'min:0'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ], [
@@ -111,6 +114,7 @@ class ProductController extends Controller
             'category_id' => $validated['category_id'] ?? null,
             'sku' => strtoupper(trim($validated['sku'])),
             'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
             'selling_price' => $validated['selling_price'],
         ];
 

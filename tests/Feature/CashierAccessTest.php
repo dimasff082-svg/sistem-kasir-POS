@@ -55,6 +55,7 @@ class CashierAccessTest extends TestCase
             route('cashier.dashboard') => 200,
             route('cashier.open_bills.index') => 200,
             route('cashier.transactions.index') => 200,
+            route('cashier.menu.index') => 200,
         ];
 
         foreach ($pages as $url => $expectedStatus) {
@@ -110,5 +111,40 @@ class CashierAccessTest extends TestCase
         $this->assertNotNull($sale->payment);
         $this->assertEquals(60000, (float) $sale->payment->amount_tendered);
         $this->assertEquals(10000, (float) $sale->payment->change_amount);
+    }
+
+    public function test_cashier_can_view_menu_catalog_with_description_and_cannot_modify(): void
+    {
+        $specialProduct = Product::factory()->create([
+            'category_id' => $this->category->id,
+            'name' => 'Brownies Fudgy Premium',
+            'sku' => 'CAKE-001',
+            'selling_price' => 45000,
+            'description' => 'Cokelat Belgia lezat dengan tekstur fudgy lumer di mulut.',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->cashier)->get(route('cashier.menu.index'));
+
+        $response->assertOk();
+        $response->assertSee('Brownies Fudgy Premium');
+        $response->assertSee('CAKE-001');
+        $response->assertSee('Cokelat Belgia lezat');
+        $response->assertSee('Lihat Penjelasan Menu');
+
+        // Pastikan tidak ada tombol manipulasi (Tambah, Ubah, Hapus)
+        $response->assertDontSee(route('admin.products.create'));
+        $response->assertDontSee('Tambah Menu');
+        $response->assertDontSee('Ubah Menu');
+        $response->assertDontSee('Hapus Menu');
+
+        // Kasir ditolak saat mencoba modifikasi menu
+        $createAttempt = $this->actingAs($this->cashier)->post(route('admin.products.store'), [
+            'name' => 'Menu Ilegal',
+            'sku' => 'ILL-001',
+            'selling_price' => 10000,
+            'category_id' => $this->category->id,
+        ]);
+        $createAttempt->assertForbidden();
     }
 }

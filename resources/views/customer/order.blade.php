@@ -301,9 +301,14 @@
                                             <h4 class="font-bold text-slate-900 text-sm leading-snug line-clamp-1">{{ $product->name }}</h4>
                                             <span class="text-[10px] text-slate-400 font-mono shrink-0">{{ $product->sku }}</span>
                                         </div>
-                                        <span class="inline-block mt-0.5 text-[9px] text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded font-medium border border-amber-200/60">
-                                            {{ $category->name }}
-                                        </span>
+                                        <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                            <span class="inline-block text-[9px] text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded font-medium border border-amber-200/60">
+                                                {{ $category->name }}
+                                            </span>
+                                        </div>
+                                        @if($product->description)
+                                            <p class="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">{{ $product->description }}</p>
+                                        @endif
                                     </div>
 
                                     <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">

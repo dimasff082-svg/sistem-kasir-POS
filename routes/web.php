@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\TransactionController as AdminTransactionControll
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Cashier\DashboardController as CashierDashboardController;
+use App\Http\Controllers\Cashier\MenuController as CashierMenuController;
 use App\Http\Controllers\Cashier\OpenBillController as CashierOpenBillController;
 use App\Http\Controllers\Cashier\TransactionController as CashierTransactionController;
 use App\Http\Controllers\CustomerOrderController;
@@ -77,6 +78,9 @@ Route::middleware(['auth', 'role:cashier,admin,owner'])->prefix('cashier')->name
 
     Route::get('/transactions', [CashierTransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{sale}', [CashierTransactionController::class, 'show'])->name('transactions.show');
+
+    // Data Menu / Katalog Menu (Read-Only untuk Kasir Menjelaskan Menu ke Pelanggan)
+    Route::get('/menu', [CashierMenuController::class, 'index'])->name('menu.index');
 });
 
 // Kitchen Display System Routes (Dapur - Kelola Status Pesanan: Menunggu -> Diproses -> Selesai)
