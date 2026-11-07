@@ -29,7 +29,7 @@
             <div class="flex items-center gap-2">
                 <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-9 h-9 rounded-xl object-contain shadow-2xs border border-[#eee7dc] p-0.5 bg-[#fdfbf7]">
                 <div>
-                    <h1 class="text-sm font-black text-[#26211a] leading-tight">{{ $storeName ?? \App\Models\Setting::getStoreName() }}</h1>
+                    <h1 class="text-xs sm:text-sm font-black text-[#26211a] leading-tight line-clamp-2">{!! nl2br(e($storeNameTwoLines ?? \App\Models\Setting::getStoreNameFormattedTwoLines())) !!}</h1>
                     <p class="text-[10px] text-[#786e60]">Struk & Status Pesanan Online</p>
                 </div>
             </div>

@@ -68,6 +68,45 @@ class Setting extends Model
     }
 
     /**
+     * Memformat nama toko menjadi dua baris.
+     * Jika admin sudah menyertakan baris baru (\n), gunakan baris tersebut.
+     * Jika belum, pisahkan secara cerdas pada pemisah kata atau simbol.
+     */
+    public static function getStoreNameFormattedTwoLines(): string
+    {
+        $name = trim(static::getStoreName());
+
+        if (str_contains($name, "\n")) {
+            return $name;
+        }
+
+        if (str_contains($name, ' - ')) {
+            return str_replace(' - ', "\n", $name);
+        }
+
+        // Jika diawali "Fira Cake " dan ada kata lanjutan (misal "Fira Cake Bakery & Pastry")
+        if (str_starts_with(strtolower($name), 'fira cake ') && strlen($name) > 10) {
+            return substr($name, 0, 9)."\n".trim(substr($name, 9));
+        }
+
+        // Jika ada 3 kata atau lebih, pisahkan seimbang di tengah
+        $words = preg_split('/\s+/', $name);
+        if ($words !== false && count($words) >= 4) {
+            $mid = (int) ceil(count($words) / 2);
+
+            return implode(' ', array_slice($words, 0, $mid))."\n".implode(' ', array_slice($words, $mid));
+        }
+        if ($words !== false && count($words) === 3) {
+            return $words[0].' '.$words[1]."\n".$words[2];
+        }
+        if ($words !== false && count($words) === 2) {
+            return $words[0]."\n".$words[1];
+        }
+
+        return $name;
+    }
+
+    /**
      * Mengambil nomor kontak toko yang telah dikonfigurasi.
      */
     public static function getStorePhone(): string

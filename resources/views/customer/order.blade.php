@@ -23,7 +23,7 @@
             <div class="flex items-center gap-3">
                 <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-10 h-10 object-contain drop-shadow-sm shrink-0 rounded-xl">
                 <div>
-                    <h1 class="text-sm font-extrabold text-slate-900 leading-tight">{{ $storeName ?? \App\Models\Setting::getStoreName() }}</h1>
+                    <h1 class="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight line-clamp-2">{!! nl2br(e($storeNameTwoLines ?? \App\Models\Setting::getStoreNameFormattedTwoLines())) !!}</h1>
                     <p class="text-[11px] text-slate-400">Pemesanan Mandiri Pelanggan</p>
                 </div>
             </div>

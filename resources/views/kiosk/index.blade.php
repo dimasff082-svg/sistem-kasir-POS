@@ -46,7 +46,7 @@
             <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-8 h-8 rounded-lg object-contain drop-shadow-sm bg-[#25221c] p-0.5 border border-[#3b3428]">
             <div>
                 <div class="flex items-center gap-1.5">
-                    <h1 class="font-serif-classic text-sm sm:text-base font-extrabold tracking-wide text-[#f7f5f0]">{{ $storeName ?? \App\Models\Setting::getStoreName() }}</h1>
+                    <h1 class="font-serif-classic text-xs sm:text-sm font-extrabold tracking-wide text-[#f7f5f0] leading-tight line-clamp-2">{!! nl2br(e($storeNameTwoLines ?? \App\Models\Setting::getStoreNameFormattedTwoLines())) !!}</h1>
                     <span class="px-1.5 py-0.2 rounded-md text-[8.5px] font-black uppercase tracking-wider bg-[#c59b27] text-stone-950">
                         Self-Order
                     </span>

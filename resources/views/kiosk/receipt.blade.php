@@ -96,7 +96,7 @@
             <!-- Header Toko -->
             <div class="text-center pb-4 border-b border-dashed border-slate-300">
                 <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-14 h-14 mx-auto object-contain mb-2 drop-shadow-sm rounded-xl">
-                <h3 class="font-extrabold text-lg text-slate-900 tracking-tight">{{ strtoupper($storeName ?? \App\Models\Setting::getStoreName()) }}</h3>
+                <h3 class="font-extrabold text-lg text-slate-900 tracking-tight leading-tight">{!! nl2br(e(strtoupper($storeNameTwoLines ?? \App\Models\Setting::getStoreNameFormattedTwoLines()))) !!}</h3>
                 <p class="text-xs text-slate-500">{{ $storeAddress ?? \App\Models\Setting::getStoreAddress() }}</p>
                 <p class="text-xs font-semibold text-slate-700 mt-0.5">Telp / WA: {{ $storePhone ?? \App\Models\Setting::getStorePhone() }}</p>
                 <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">

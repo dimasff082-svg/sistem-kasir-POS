@@ -54,15 +54,16 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Nama Toko -->
+                        <!-- Nama Toko (Dua Baris) -->
                         <div>
-                            <label class="block text-xs font-bold text-[#262017] mb-1.5">
-                                Nama Toko / Bakery <span class="text-rose-600">*</span>
+                            <label class="block text-xs font-bold text-[#262017] mb-1.5 flex items-center justify-between">
+                                <span>Nama Toko / Bakery (Dua Baris) <span class="text-rose-600">*</span></span>
+                                <span class="text-[10px] text-[#8c8270] font-normal">Tekan Enter untuk baris baru</span>
                             </label>
-                            <input type="text" name="store_name" required
-                                value="{{ old('store_name', $settings['store_name'] ?? 'Fira Cake Bakery & Pastry') }}"
-                                placeholder="Contoh: Fira Cake Bakery & Pastry"
-                                class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#d6cfc2] bg-[#faf8f5] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#c59b27]">
+                            <textarea name="store_name" rows="2" required
+                                placeholder="Contoh:&#10;Fira Cake&#10;Bakery & Pastry"
+                                class="w-full text-xs p-3 rounded-xl border border-[#d6cfc2] bg-[#faf8f5] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#c59b27] font-medium leading-relaxed">{{ old('store_name', $settings['store_name'] ?? "Fira Cake\nBakery & Pastry") }}</textarea>
+                            <p class="text-[11px] text-[#786e60] mt-1">Nama toko ditampilkan dalam dua baris di logo sidebar, login, dan struk belanja.</p>
                         </div>
 
                         <!-- Nomor Kontak Toko (WA) -->

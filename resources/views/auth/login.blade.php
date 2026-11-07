@@ -21,7 +21,7 @@
             <div class="inline-flex items-center justify-center mb-3">
                 <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-24 h-24 object-contain rounded-2xl drop-shadow-2xl hover:scale-105 transition-transform duration-300 bg-[#25221c] p-1 border border-[#3b3428]">
             </div>
-            <h1 class="text-2xl font-serif-classic font-bold tracking-tight text-[#f5ebd7]">{{ strtoupper($storeName ?? \App\Models\Setting::getStoreName()) }}</h1>
+            <h1 class="text-2xl font-serif-classic font-bold tracking-tight text-[#f5ebd7] leading-tight">{!! nl2br(e(strtoupper($storeNameTwoLines ?? \App\Models\Setting::getStoreNameFormattedTwoLines()))) !!}</h1>
             <p class="text-xs uppercase font-cinzel tracking-[0.25em] text-[#c59b27] mt-1">{{ $storeHours ?? \App\Models\Setting::getStoreHours() }}</p>
             <p class="text-xs uppercase font-cinzel tracking-[0.25em] text-[#c59b27] mt-1">Point Of Sales Terintegrasi</p>
         </div>

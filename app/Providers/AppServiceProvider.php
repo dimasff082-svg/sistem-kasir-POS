@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with([
                 'storeSettings' => Setting::allMapped(),
                 'storeName' => Setting::getStoreName(),
+                'storeNameTwoLines' => Setting::getStoreNameFormattedTwoLines(),
                 'storeLogo' => Setting::getLogoUrl(),
                 'storePhone' => Setting::getStorePhone(),
                 'storeAddress' => Setting::getStoreAddress(),

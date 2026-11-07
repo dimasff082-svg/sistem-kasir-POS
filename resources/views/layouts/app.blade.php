@@ -44,12 +44,16 @@
     <div class="h-screen flex overflow-hidden bg-[#f7f5ef]">
         <!-- Sidebar Navigation (Classic Modern Theme) -->
         <aside id="app-sidebar" class="w-64 h-full flex flex-col shrink-0 bg-[#191714] text-[#d6cfc2] border-r border-[#2b261f] shadow-2xl transition-[margin] duration-300 ease-in-out z-40">
-            <!-- Brand Header: Logo & Store Name -->
-            <div class="h-16 flex items-center px-5 gap-3 bg-[#12110e] border-b border-[#2b261f] shrink-0">
-                <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-9 h-9 rounded-lg object-contain drop-shadow-md shrink-0 bg-[#25221c] p-0.5 border border-[#383228]">
-                <div class="overflow-hidden">
-                    <span class="font-serif-classic font-bold text-sm tracking-wide text-[#f2ece1] block truncate">{{ $storeName ?? \App\Models\Setting::getStoreName() }}</span>
-                    <span class="text-[9px] tracking-widest uppercase font-semibold text-[#c59b27] block truncate">{{ $storeHours ?? \App\Models\Setting::getStoreHours() }}</span>
+            <!-- Brand Header: Logo & Store Name (Dua Baris) -->
+            <div class="min-h-16 py-2.5 flex items-center px-4 gap-2.5 bg-[#12110e] border-b border-[#2b261f] shrink-0">
+                <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-10 h-10 rounded-xl object-contain drop-shadow-md shrink-0 bg-[#25221c] p-0.5 border border-[#383228]">
+                <div class="overflow-hidden flex-1 min-w-0">
+                    <div class="font-serif-classic font-bold text-xs sm:text-[13px] tracking-wide text-[#f2ece1] leading-tight line-clamp-2 break-words">
+                        {!! nl2br(e($storeNameTwoLines ?? \App\Models\Setting::getStoreNameFormattedTwoLines())) !!}
+                    </div>
+                    @if(!empty($storeHours ?? \App\Models\Setting::getStoreHours()))
+                        <span class="text-[8.5px] tracking-wider uppercase font-semibold text-[#c59b27] block truncate mt-0.5">{{ $storeHours ?? \App\Models\Setting::getStoreHours() }}</span>
+                    @endif
                 </div>
             </div>
 
@@ -808,8 +812,69 @@
     </div>
 
     <script>
+        // Pengecekan status disable / mute notifikasi suara orderan
+        window.isOrderSoundDisabled = function() {
+            return localStorage.getItem('order_voice_sound_disabled') === 'true';
+        };
+
+        // Fungsi toggle on/off suara orderan
+        window.toggleOrderSoundAlert = function() {
+            const currentlyDisabled = window.isOrderSoundDisabled();
+            const newDisabledState = !currentlyDisabled;
+            localStorage.setItem('order_voice_sound_disabled', newDisabledState ? 'true' : 'false');
+            window.syncOrderSoundUI();
+
+            if (newDisabledState) {
+                window.showOrderToast('Suara Orderan Dinonaktifkan', 'Notifikasi suara orderan masuk telah dibisukan (Mute).');
+            } else {
+                window.showOrderToast('Suara Orderan Aktif', 'Notifikasi suara orderan masuk kini aktif.');
+                window.playOrderAlertSound('Suara orderan aktif', true);
+            }
+        };
+
+        // Sinkronisasi tombol UI suara di antarmuka (Dashboard Kasir & KDS Dapur)
+        window.syncOrderSoundUI = function() {
+            const isDisabled = window.isOrderSoundDisabled();
+            const buttons = document.querySelectorAll('.btn-toggle-order-sound');
+            buttons.forEach(btn => {
+                const iconEl = btn.querySelector('.order-sound-icon');
+                const labelEl = btn.querySelector('.order-sound-label');
+                if (isDisabled) {
+                    btn.classList.remove('bg-emerald-900/40', 'hover:bg-emerald-900/60', 'text-emerald-200', 'border-emerald-400/40', 'bg-emerald-500', 'hover:bg-emerald-400', 'text-stone-950');
+                    btn.classList.add('bg-rose-900/40', 'hover:bg-rose-900/60', 'text-rose-200', 'border-rose-400/50');
+                    btn.setAttribute('title', 'Suara orderan sedang dinonaktifkan (Mute). Klik untuk mengaktifkan kembali.');
+                    if (iconEl) {
+                        iconEl.innerHTML = `<svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" /></svg>`;
+                    }
+                    if (labelEl) {
+                        labelEl.textContent = 'Suara: Dinonaktifkan';
+                    }
+                } else {
+                    btn.classList.remove('bg-rose-900/40', 'hover:bg-rose-900/60', 'text-rose-200', 'border-rose-400/50');
+                    btn.classList.add('bg-emerald-900/40', 'hover:bg-emerald-900/60', 'text-emerald-200', 'border-emerald-400/40');
+                    btn.setAttribute('title', 'Suara orderan aktif. Klik untuk mematikan/mute suara.');
+                    if (iconEl) {
+                        iconEl.innerHTML = `<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>`;
+                    }
+                    if (labelEl) {
+                        labelEl.textContent = 'Suara: Aktif';
+                    }
+                }
+            });
+        };
+
+        // Inisialisasi status tombol suara saat DOM siap
+        document.addEventListener('DOMContentLoaded', function() {
+            window.syncOrderSoundUI();
+        });
+
         // Global Audio Alert System: Suara "Halo ada orderan masuk" untuk Kasir & Dapur
-        window.playOrderAlertSound = function(customText) {
+        window.playOrderAlertSound = function(customText, forcePlay = false) {
+            // Jika suara sedang dinonaktifkan dan bukan pengetesan paksa (forcePlay)
+            if (!forcePlay && window.isOrderSoundDisabled && window.isOrderSoundDisabled()) {
+                return;
+            }
+
             const textToSpeak = customText || 'Halo ada orderan masuk';
 
             // 1. Dual-tone pleasant POS chime dengan Web Audio API

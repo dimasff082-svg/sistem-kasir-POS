@@ -173,20 +173,26 @@ class OrderVoiceNotificationTest extends TestCase
             ->assertStatus(403);
     }
 
-    public function test_dashboards_contain_sound_test_buttons(): void
+    public function test_dashboards_contain_sound_test_and_disable_toggle_buttons(): void
     {
-        // Cashier dashboard has sound button and speech synthesis caller
+        // Cashier dashboard has sound test and disable/enable toggle button
         $cashierRes = $this->actingAs($this->cashier)->get(route('cashier.dashboard'));
         $cashierRes->assertStatus(200);
         $cashierRes->assertSee('playOrderAlertSound');
         $cashierRes->assertSee('Halo ada orderan masuk');
         $cashierRes->assertSee('Tes Suara Orderan');
+        $cashierRes->assertSee('btn-toggle-order-sound');
+        $cashierRes->assertSee('toggleOrderSoundAlert');
+        $cashierRes->assertSee('Suara: Aktif');
 
-        // Kitchen display has sound button and speech synthesis caller
+        // Kitchen display has sound test and disable/enable toggle button
         $kitchenRes = $this->actingAs($this->kitchen)->get(route('kitchen.index'));
         $kitchenRes->assertStatus(200);
         $kitchenRes->assertSee('playOrderAlertSound');
         $kitchenRes->assertSee('Halo ada orderan masuk');
         $kitchenRes->assertSee('Tes Suara Orderan');
+        $kitchenRes->assertSee('btn-toggle-order-sound');
+        $kitchenRes->assertSee('toggleOrderSoundAlert');
+        $kitchenRes->assertSee('Suara: Aktif');
     }
 }

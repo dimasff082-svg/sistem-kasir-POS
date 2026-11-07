@@ -76,7 +76,7 @@
         <!-- Store Header -->
         <div class="text-center pb-5 border-b border-dashed border-slate-300">
             <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-16 h-16 mx-auto object-contain mb-2 drop-shadow-sm rounded-xl">
-            <h3 class="font-extrabold text-lg text-slate-900 tracking-tight">{{ strtoupper($storeName ?? \App\Models\Setting::getStoreName()) }}</h3>
+            <h3 class="font-extrabold text-lg text-slate-900 tracking-tight leading-tight">{!! nl2br(e(strtoupper($storeNameTwoLines ?? \App\Models\Setting::getStoreNameFormattedTwoLines()))) !!}</h3>
             <p class="text-xs text-slate-500 mt-0.5">{{ $storeAddress ?? \App\Models\Setting::getStoreAddress() }}</p>
             <p class="text-xs font-semibold text-slate-700">Telp / WA: {{ $storePhone ?? \App\Models\Setting::getStorePhone() }}</p>
             <p class="text-xs text-slate-400 mt-0.5">Struk Resmi Pembelian</p>

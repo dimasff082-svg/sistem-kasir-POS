@@ -44,7 +44,7 @@
                         onerror="this.src='{{ asset('images/default-cake.png') }}'">
                     <div>
                         <div class="flex items-center gap-1.5">
-                            <h1 class="text-sm font-black text-[#26211a] tracking-tight">{{ $settings['store_name'] ?? 'Fira Cake' }}</h1>
+                            <h1 class="text-xs sm:text-sm font-black text-[#26211a] tracking-tight leading-tight line-clamp-2">{!! nl2br(e($storeNameTwoLines ?? \App\Models\Setting::getStoreNameFormattedTwoLines())) !!}</h1>
                             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-[#c59b27] text-stone-950">
                                 Online
                             </span>

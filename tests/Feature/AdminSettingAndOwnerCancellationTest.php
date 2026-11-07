@@ -98,15 +98,18 @@ class AdminSettingAndOwnerCancellationTest extends TestCase
         $this->assertNotNull($savedLogo);
         Storage::disk('public')->assertExists($savedLogo);
 
-        // Pastikan perubahan langsung tampil di dashboard admin dan halaman login
+        // Pastikan perubahan langsung tampil di dashboard admin dan halaman login (dua baris)
         $dashboardResponse = $this->actingAs($this->admin)->get(route('admin.dashboard'));
         $dashboardResponse->assertStatus(200);
-        $dashboardResponse->assertSee('Fira Cake Premium Bakery');
+        $dashboardResponse->assertSee('Fira Cake');
+        $dashboardResponse->assertSee('Premium Bakery');
 
         $this->post(route('logout'));
         $loginResponse = $this->get(route('login'));
         $loginResponse->assertStatus(200);
-        $loginResponse->assertSee('FIRA CAKE PREMIUM BAKERY');
+        $loginResponse->assertSee('FIRA CAKE');
+        $loginResponse->assertSee('PREMIUM BAKERY');
+        $loginResponse->assertSee('<br />', false);
     }
 
     public function test_online_order_page_renders_dynamic_settings_cleanly(): void
@@ -331,17 +334,20 @@ class AdminSettingAndOwnerCancellationTest extends TestCase
         Setting::set('store_hours', '06:30 - 23:00 WITA');
         Setting::set('app_logo', 'settings/custom-sentosa-logo.png');
 
-        // 1. Sidebar on Admin Dashboard
+        // 1. Sidebar on Admin Dashboard (menampilkan nama toko dua baris)
         $adminDashboard = $this->actingAs($this->admin)->get(route('admin.dashboard'));
         $adminDashboard->assertStatus(200);
-        $adminDashboard->assertSee('Sentosa Bakery & Cafe Makassar');
+        $adminDashboard->assertSee('Sentosa Bakery');
+        $adminDashboard->assertSee('Cafe Makassar');
+        $adminDashboard->assertSee('<br />', false);
         $adminDashboard->assertSee('settings/custom-sentosa-logo.png');
 
-        // 2. Login Page
+        // 2. Login Page (dua baris)
         $this->post(route('logout'));
         $loginPage = $this->get(route('login'));
         $loginPage->assertStatus(200);
-        $loginPage->assertSee('SENTOSA BAKERY & CAFE MAKASSAR');
+        $loginPage->assertSee('SENTOSA BAKERY');
+        $loginPage->assertSee('CAFE MAKASSAR');
         $loginPage->assertSee('settings/custom-sentosa-logo.png');
 
         // 3. POS Receipt
@@ -357,14 +363,16 @@ class AdminSettingAndOwnerCancellationTest extends TestCase
 
         $posReceipt = $this->actingAs($this->cashier)->get(route('pos.receipt', $sale->id));
         $posReceipt->assertStatus(200);
-        $posReceipt->assertSee('SENTOSA BAKERY & CAFE MAKASSAR');
+        $posReceipt->assertSee('SENTOSA BAKERY');
+        $posReceipt->assertSee('CAFE MAKASSAR');
         $posReceipt->assertSee('Jl. Sam Ratulangi No. 123, Makassar');
         $posReceipt->assertSee('081299887766');
 
         // 4. Kiosk Receipt
         $kioskReceipt = $this->get(route('kiosk.receipt', $sale->id));
         $kioskReceipt->assertStatus(200);
-        $kioskReceipt->assertSee('SENTOSA BAKERY & CAFE MAKASSAR');
+        $kioskReceipt->assertSee('SENTOSA BAKERY');
+        $kioskReceipt->assertSee('CAFE MAKASSAR');
         $kioskReceipt->assertSee('Jl. Sam Ratulangi No. 123, Makassar');
         $kioskReceipt->assertSee('081299887766');
 
