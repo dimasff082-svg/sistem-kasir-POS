@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Pemesanan Mandiri - Fira Cake</title>
+    <title>Pemesanan Mandiri - {{ $storeName ?? \App\Models\Setting::getStoreName() }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,10 +43,10 @@
     <!-- Top Compact Kiosk Header Bar -->
     <header class="h-13 bg-[#191714] text-[#f7f5f0] border-b border-[#2b261f] px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-md z-30">
         <div class="flex items-center gap-2.5">
-            <img src="{{ asset('images/logo.png') }}" alt="Fira Cake" class="w-8 h-8 object-contain drop-shadow-sm">
+            <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-8 h-8 rounded-lg object-contain drop-shadow-sm bg-[#25221c] p-0.5 border border-[#3b3428]">
             <div>
                 <div class="flex items-center gap-1.5">
-                    <h1 class="font-serif-classic text-sm sm:text-base font-extrabold tracking-wide text-[#f7f5f0]">Fira Cake</h1>
+                    <h1 class="font-serif-classic text-sm sm:text-base font-extrabold tracking-wide text-[#f7f5f0]">{{ $storeName ?? \App\Models\Setting::getStoreName() }}</h1>
                     <span class="px-1.5 py-0.2 rounded-md text-[8.5px] font-black uppercase tracking-wider bg-[#c59b27] text-stone-950">
                         Self-Order
                     </span>

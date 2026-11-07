@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pemesanan Online - Fira Cake Bakery & Pastry</title>
+    <title>Pemesanan Online - {{ $settings['store_name'] ?? ($storeName ?? \App\Models\Setting::getStoreName()) }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -102,7 +102,8 @@
                     } else {
                         $storeWaNumber = $cleanStorePhone;
                     }
-                    $storeWaUrl = "https://api.whatsapp.com/send?phone={$storeWaNumber}&text=" . urlencode("Halo Fira Cake, saya ingin bertanya seputar pesanan online...");
+                    $storeNameForWa = $settings['store_name'] ?? ($storeName ?? \App\Models\Setting::getStoreName());
+                    $storeWaUrl = "https://api.whatsapp.com/send?phone={$storeWaNumber}&text=" . urlencode("Halo {$storeNameForWa}, saya ingin bertanya seputar pesanan online...");
                 @endphp
                 <a href="{{ $storeWaUrl }}" target="_blank"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs transition active:scale-95">
@@ -395,7 +396,7 @@
                             <span class="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold">✓</span>
                         </div>
                         <p class="text-[10px] text-amber-900/90 leading-tight">
-                            Pesanan online wajib lunas melalui Midtrans Payment Gateway. Setelah pembayaran selesai, pesanan Anda otomatis langsung masuk ke antrean kasir & dapur Fira Cake.
+                            Pesanan online wajib lunas melalui Midtrans Payment Gateway. Setelah pembayaran selesai, pesanan Anda otomatis langsung masuk ke antrean kasir & dapur {{ $settings['store_name'] ?? ($storeName ?? \App\Models\Setting::getStoreName()) }}.
                         </p>
                     </div>
 
@@ -446,7 +447,7 @@
                         </div>
                         <div>
                             <h3 class="text-xs font-black text-[#26211a] leading-tight">Midtrans Simulator</h3>
-                            <p class="text-[9px] text-[#786e60]">Fira Cake Bakery & Pastry</p>
+                            <p class="text-[9px] text-[#786e60]">{{ $settings['store_name'] ?? ($storeName ?? \App\Models\Setting::getStoreName()) }}</p>
                         </div>
                     </div>
                     <button type="button" onclick="closePaymentGatewayModal()" class="text-stone-400 hover:text-stone-600 text-lg font-bold">

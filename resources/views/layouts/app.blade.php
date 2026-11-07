@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'POS App' }} - Point of Sale</title>
+    <title>{{ $title ?? 'POS App' }} - {{ $storeName ?? \App\Models\Setting::getStoreName() }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,12 +44,12 @@
     <div class="h-screen flex overflow-hidden bg-[#f7f5ef]">
         <!-- Sidebar Navigation (Classic Modern Theme) -->
         <aside id="app-sidebar" class="w-64 h-full flex flex-col shrink-0 bg-[#191714] text-[#d6cfc2] border-r border-[#2b261f] shadow-2xl transition-[margin] duration-300 ease-in-out z-40">
-            <!-- Brand Header: Fira Cake Logo -->
+            <!-- Brand Header: Logo & Store Name -->
             <div class="h-16 flex items-center px-5 gap-3 bg-[#12110e] border-b border-[#2b261f] shrink-0">
-                <img src="{{ asset('images/logo.png') }}" alt="Fira Cake" class="w-9 h-9 object-contain drop-shadow-md shrink-0">
+                <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-9 h-9 rounded-lg object-contain drop-shadow-md shrink-0 bg-[#25221c] p-0.5 border border-[#383228]">
                 <div class="overflow-hidden">
-                    <span class="font-serif-classic font-bold text-sm tracking-wide text-[#f2ece1] block truncate">Fira Cake</span>
-                    <span class="text-[9px] tracking-widest uppercase font-semibold text-[#c59b27] block">Bakery & Pastry</span>
+                    <span class="font-serif-classic font-bold text-sm tracking-wide text-[#f2ece1] block truncate">{{ $storeName ?? \App\Models\Setting::getStoreName() }}</span>
+                    <span class="text-[9px] tracking-widest uppercase font-semibold text-[#c59b27] block truncate">{{ $storeHours ?? \App\Models\Setting::getStoreHours() }}</span>
                 </div>
             </div>
 
@@ -301,7 +301,7 @@
             <!-- Logout Section -->
             <div class="p-3 border-t border-[#2b261f] shrink-0">
                 <form action="{{ route('logout') }}" method="POST" id="sidebar-logout-form"
-                    data-confirm="Apakah Anda yakin ingin keluar dari sistem POS Fira Cake Bakery & Pastry?"
+                    data-confirm="Apakah Anda yakin ingin keluar dari sistem POS {{ $storeName ?? \App\Models\Setting::getStoreName() }}?"
                     data-confirm-title="Konfirmasi Keluar (Logout)"
                     data-confirm-btn="Ya, Keluar"
                     data-confirm-type="warning">

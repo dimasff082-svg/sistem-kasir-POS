@@ -198,10 +198,13 @@
 
     <div class="container" id="slip-content">
         <div class="header">
-            <div>
-                <h1 class="brand-title">Fira Cake</h1>
-                <p class="brand-subtitle">BAKERY & PASTRY</p>
-                <div style="font-size: 10px; color: #786e60; margin-top: 4px;">Jl. Karunrung No. 5, Kota Makassar</div>
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="Logo" style="width: 50px; height: 50px; object-fit: contain; border-radius: 8px;">
+                <div>
+                    <h1 class="brand-title">{{ $storeName ?? \App\Models\Setting::getStoreName() }}</h1>
+                    <p class="brand-subtitle">{{ strtoupper($storeHours ?? \App\Models\Setting::getStoreHours()) }}</p>
+                    <div style="font-size: 10px; color: #786e60; margin-top: 4px;">{{ $storeAddress ?? \App\Models\Setting::getStoreAddress() }} &bull; Telp: {{ $storePhone ?? \App\Models\Setting::getStorePhone() }}</div>
+                </div>
             </div>
             <div class="slip-title">
                 <h2>SLIP PENGGAJIAN RESMI</h2>
@@ -284,7 +287,7 @@
             </div>
             <div class="sign-box">
                 <p style="margin: 0; color: #786e60;">Makassar, {{ $salary->payment_date?->format('d M Y') ?? date('d M Y') }}</p>
-                <div class="sign-line">Manajemen Fira Cake</div>
+                <div class="sign-line">Manajemen {{ $storeName ?? \App\Models\Setting::getStoreName() }}</div>
             </div>
         </div>
     </div>

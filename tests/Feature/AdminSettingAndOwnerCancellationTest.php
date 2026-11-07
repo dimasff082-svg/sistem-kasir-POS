@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Salary;
 use App\Models\Sale;
 use App\Models\Setting;
 use App\Models\User;
@@ -96,6 +97,16 @@ class AdminSettingAndOwnerCancellationTest extends TestCase
         $savedLogo = Setting::get('app_logo');
         $this->assertNotNull($savedLogo);
         Storage::disk('public')->assertExists($savedLogo);
+
+        // Pastikan perubahan langsung tampil di dashboard admin dan halaman login
+        $dashboardResponse = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+        $dashboardResponse->assertStatus(200);
+        $dashboardResponse->assertSee('Fira Cake Premium Bakery');
+
+        $this->post(route('logout'));
+        $loginResponse = $this->get(route('login'));
+        $loginResponse->assertStatus(200);
+        $loginResponse->assertSee('FIRA CAKE PREMIUM BAKERY');
     }
 
     public function test_online_order_page_renders_dynamic_settings_cleanly(): void
@@ -307,5 +318,77 @@ class AdminSettingAndOwnerCancellationTest extends TestCase
         $responseAdminPaid->assertStatus(200);
         $responseAdminPaid->assertSee('TRX-PAID-001');
         $responseAdminPaid->assertDontSee('TRX-CANCEL-001');
+    }
+
+    public function test_store_settings_changes_are_reflected_across_entire_application(): void
+    {
+        Storage::fake('public');
+
+        // Set custom settings
+        Setting::set('store_name', 'Sentosa Bakery & Cafe Makassar');
+        Setting::set('store_phone', '081299887766');
+        Setting::set('store_address', 'Jl. Sam Ratulangi No. 123, Makassar');
+        Setting::set('store_hours', '06:30 - 23:00 WITA');
+        Setting::set('app_logo', 'settings/custom-sentosa-logo.png');
+
+        // 1. Sidebar on Admin Dashboard
+        $adminDashboard = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+        $adminDashboard->assertStatus(200);
+        $adminDashboard->assertSee('Sentosa Bakery & Cafe Makassar');
+        $adminDashboard->assertSee('settings/custom-sentosa-logo.png');
+
+        // 2. Login Page
+        $this->post(route('logout'));
+        $loginPage = $this->get(route('login'));
+        $loginPage->assertStatus(200);
+        $loginPage->assertSee('SENTOSA BAKERY & CAFE MAKASSAR');
+        $loginPage->assertSee('settings/custom-sentosa-logo.png');
+
+        // 3. POS Receipt
+        $sale = Sale::factory()->create([
+            'transaction_number' => 'TRX-SETTING-001',
+            'table_number' => 'ONLINE',
+            'user_id' => $this->cashier->id,
+            'status' => 'completed',
+            'order_status' => 'completed',
+            'payment_status' => 'paid',
+            'total_amount' => 75000,
+        ]);
+
+        $posReceipt = $this->actingAs($this->cashier)->get(route('pos.receipt', $sale->id));
+        $posReceipt->assertStatus(200);
+        $posReceipt->assertSee('SENTOSA BAKERY & CAFE MAKASSAR');
+        $posReceipt->assertSee('Jl. Sam Ratulangi No. 123, Makassar');
+        $posReceipt->assertSee('081299887766');
+
+        // 4. Kiosk Receipt
+        $kioskReceipt = $this->get(route('kiosk.receipt', $sale->id));
+        $kioskReceipt->assertStatus(200);
+        $kioskReceipt->assertSee('SENTOSA BAKERY & CAFE MAKASSAR');
+        $kioskReceipt->assertSee('Jl. Sam Ratulangi No. 123, Makassar');
+        $kioskReceipt->assertSee('081299887766');
+
+        // 5. Kiosk Screen
+        $kioskScreen = $this->get(route('kiosk.index'));
+        $kioskScreen->assertStatus(200);
+        $kioskScreen->assertSee('Sentosa Bakery & Cafe Makassar');
+
+        // 6. Online Order Status Page
+        $onlineStatus = $this->get(route('online_order.status', $sale->transaction_number));
+        $onlineStatus->assertStatus(200);
+        $onlineStatus->assertSee('Sentosa Bakery & Cafe Makassar');
+        $onlineStatus->assertSee('6281299887766');
+
+        // 7. Salary Slip Print Page
+        $salary = Salary::factory()->create([
+            'user_id' => $this->cashier->id,
+            'created_by' => $this->admin->id,
+        ]);
+
+        $salaryPrint = $this->actingAs($this->admin)->get(route('admin.salaries.print', $salary->id));
+        $salaryPrint->assertStatus(200);
+        $salaryPrint->assertSee('Sentosa Bakery & Cafe Makassar');
+        $salaryPrint->assertSee('Jl. Sam Ratulangi No. 123, Makassar');
+        $salaryPrint->assertSee('Manajemen Sentosa Bakery & Cafe Makassar');
     }
 }

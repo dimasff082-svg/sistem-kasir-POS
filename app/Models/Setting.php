@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Setting extends Model
 {
@@ -15,6 +16,13 @@ class Setting extends Model
         'type',
         'group',
     ];
+
+    /**
+     * Cache memori lokal agar query setting tidak berulang pada satu siklus request.
+     *
+     * @var array<string, mixed>|null
+     */
+    protected static ?array $cachedSettings = null;
 
     /**
      * Nilai standar bawaan jika setting belum tersimpan di database.
@@ -34,6 +42,14 @@ class Setting extends Model
     ];
 
     /**
+     * Mengosongkan cache memori settings.
+     */
+    public static function clearCache(): void
+    {
+        static::$cachedSettings = null;
+    }
+
+    /**
      * Mengambil batas maksimal radius absensi karyawan dalam satuan meter.
      */
     public static function getAttendanceMaxDistance(): float
@@ -44,14 +60,73 @@ class Setting extends Model
     }
 
     /**
+     * Mengambil nama toko yang telah dikonfigurasi.
+     */
+    public static function getStoreName(): string
+    {
+        return (string) static::get('store_name', self::DEFAULTS['store_name']);
+    }
+
+    /**
+     * Mengambil nomor kontak toko yang telah dikonfigurasi.
+     */
+    public static function getStorePhone(): string
+    {
+        return (string) static::get('store_phone', self::DEFAULTS['store_phone']);
+    }
+
+    /**
+     * Mengambil alamat lengkap toko yang telah dikonfigurasi.
+     */
+    public static function getStoreAddress(): string
+    {
+        return (string) static::get('store_address', self::DEFAULTS['store_address']);
+    }
+
+    /**
+     * Mengambil email resmi toko yang telah dikonfigurasi.
+     */
+    public static function getStoreEmail(): string
+    {
+        return (string) static::get('store_email', self::DEFAULTS['store_email']);
+    }
+
+    /**
+     * Mengambil jam operasional toko yang telah dikonfigurasi.
+     */
+    public static function getStoreHours(): string
+    {
+        return (string) static::get('store_hours', self::DEFAULTS['store_hours']);
+    }
+
+    /**
+     * Mengambil URL aset gambar logo toko.
+     * Mengutamakan file yang diunggah ke storage, atau default fallback ke logo aset bawaan.
+     */
+    public static function getLogoUrl(): string
+    {
+        $logo = static::get('app_logo');
+
+        if (! empty($logo)) {
+            if (str_starts_with((string) $logo, 'http://') || str_starts_with((string) $logo, 'https://')) {
+                return (string) $logo;
+            }
+
+            return asset('storage/'.$logo);
+        }
+
+        return asset('images/logo.png');
+    }
+
+    /**
      * Mengambil nilai pengaturan berdasarkan key.
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        $setting = static::where('key', $key)->first();
+        $settings = static::allMapped();
 
-        if ($setting !== null && $setting->value !== null && $setting->value !== '') {
-            return $setting->value;
+        if (array_key_exists($key, $settings) && $settings[$key] !== null && $settings[$key] !== '') {
+            return $settings[$key];
         }
 
         if ($default !== null) {
@@ -66,6 +141,8 @@ class Setting extends Model
      */
     public static function set(string $key, mixed $value, string $type = 'text', string $group = 'general'): self
     {
+        static::clearCache();
+
         return static::updateOrCreate(
             ['key' => $key],
             [
@@ -77,14 +154,46 @@ class Setting extends Model
     }
 
     /**
+     * Booted model event untuk memastikan cache selalu sinkron.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            static::clearCache();
+        });
+        static::deleted(function () {
+            static::clearCache();
+        });
+    }
+
+    /**
      * Mengambil seluruh pengaturan sebagai associative array dengan default fallback.
      *
      * @return array<string, mixed>
      */
     public static function allMapped(): array
     {
-        $dbSettings = static::pluck('value', 'key')->toArray();
+        if (app()->runningUnitTests()) {
+            try {
+                $dbSettings = static::pluck('value', 'key')->toArray();
 
-        return array_merge(self::DEFAULTS, array_filter($dbSettings, fn ($v) => $v !== null && $v !== ''));
+                return array_merge(self::DEFAULTS, array_filter($dbSettings, fn ($v) => $v !== null && $v !== ''));
+            } catch (\Throwable) {
+                return self::DEFAULTS;
+            }
+        }
+
+        if (static::$cachedSettings !== null) {
+            return static::$cachedSettings;
+        }
+
+        try {
+            $dbSettings = static::pluck('value', 'key')->toArray();
+            static::$cachedSettings = array_merge(self::DEFAULTS, array_filter($dbSettings, fn ($v) => $v !== null && $v !== ''));
+        } catch (\Throwable) {
+            static::$cachedSettings = self::DEFAULTS;
+        }
+
+        return static::$cachedSettings;
     }
 }

@@ -10,7 +10,7 @@
             <div class="flex items-center gap-2">
                 <span class="text-xs font-bold uppercase tracking-wider text-[#c59b27]">Konfigurasi Sistem</span>
                 <span class="text-stone-300">•</span>
-                <span class="text-xs font-medium text-[#786e60]">Fira Cake Bakery & Pastry</span>
+                <span class="text-xs font-medium text-[#786e60]">{{ $storeName ?? \App\Models\Setting::getStoreName() }}</span>
             </div>
             <h1 class="font-serif-classic text-2xl sm:text-3xl font-bold text-[#262017] mt-1">
                 Pengaturan Toko & Pemesanan Online
@@ -197,7 +197,7 @@
                                 </span>
                             </div>
                             <p class="text-[11px] text-[#786e60] mt-1">
-                                Batas toleransi jarak GPS karyawan dari titik kantor toko Fira Cake (BISOLPIN Ruko Ruby) agar absensi dapat dikonfirmasi.
+                                Batas toleransi jarak GPS karyawan dari titik kantor toko {{ $storeName ?? \App\Models\Setting::getStoreName() }} agar absensi dapat dikonfirmasi.
                             </p>
                         </div>
 
@@ -231,11 +231,7 @@
                     </div>
 
                     <div class="flex flex-col items-center justify-center p-4 bg-[#faf8f5] rounded-xl border border-dashed border-[#d6cfc2] text-center">
-                        @if(!empty($settings['app_logo']))
-                            <img src="{{ asset('storage/' . $settings['app_logo']) }}" alt="Logo Toko" class="w-24 h-24 object-contain rounded-xl shadow-xs border border-white mb-3">
-                        @else
-                            <img src="{{ asset('images/logo.png') }}" alt="Logo Toko" class="w-24 h-24 object-contain rounded-xl shadow-xs border border-white mb-3" onerror="this.src='{{ asset('images/default-cake.png') }}'">
-                        @endif
+                        <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="Logo Toko" class="w-24 h-24 object-contain rounded-xl shadow-xs border border-white mb-3 bg-white p-1" onerror="this.src='{{ asset('images/default-cake.png') }}'">
                         <span class="text-xs font-semibold text-[#262017]">Logo Saat Ini</span>
                         <span class="text-[11px] text-[#786e60]">Maksimal 2 MB (PNG, JPG, SVG, WEBP)</span>
                     </div>

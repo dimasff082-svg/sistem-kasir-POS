@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pesan Menu - Meja {{ $table->table_number }} | Cafe & Resto</title>
+    <title>Pesan Menu - Meja {{ $table->table_number }} | {{ $storeName ?? \App\Models\Setting::getStoreName() }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,9 +21,9 @@
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 shadow-2xs">
         <div class="max-w-2xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="{{ asset('images/logo.png') }}" alt="Fira Cake" class="w-10 h-10 object-contain drop-shadow-sm shrink-0">
+                <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-10 h-10 object-contain drop-shadow-sm shrink-0 rounded-xl">
                 <div>
-                    <h1 class="text-sm font-extrabold text-slate-900 leading-tight">Fira Cake</h1>
+                    <h1 class="text-sm font-extrabold text-slate-900 leading-tight">{{ $storeName ?? \App\Models\Setting::getStoreName() }}</h1>
                     <p class="text-[11px] text-slate-400">Pemesanan Mandiri Pelanggan</p>
                 </div>
             </div>

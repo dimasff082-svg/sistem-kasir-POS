@@ -94,7 +94,7 @@
                     </h3>
                 </div>
                 <p class="text-xs text-[#786e60] mt-0.5">
-                    Titik Kantor: <span class="font-bold text-[#262017]">BISOLPIN, Ruko Ruby, Jl. Boulevard Rubi II, Masale, Panakkukang, Makassar</span>
+                    Titik Kantor: <span class="font-bold text-[#262017]">{{ $storeAddress ?? \App\Models\Setting::getStoreAddress() }}</span>
                 </p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
@@ -521,7 +521,7 @@ function attendanceManager() {
 
             this.officeMarker = L.marker([this.officeLat, this.officeLng], { icon: officeIcon })
                 .addTo(this.map)
-                .bindPopup('<b>Kantor Fira Cake</b><br>BISOLPIN, Ruko Ruby, Jl. Boulevard Rubi II, Masale, Makassar');
+                .bindPopup('<b>Kantor ' + @json($storeName ?? \App\Models\Setting::getStoreName()) + '</b><br>' + @json($storeAddress ?? \App\Models\Setting::getStoreAddress()));
 
             // 2. Lingkaran Radius 15 Meter
             this.radiusCircle = L.circle([this.officeLat, this.officeLng], {

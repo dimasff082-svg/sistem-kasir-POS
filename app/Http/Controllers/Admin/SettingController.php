@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class SettingController extends Controller
@@ -63,6 +64,10 @@ class SettingController extends Controller
 
         // Jika upload file logo baru
         if ($request->hasFile('app_logo')) {
+            $oldLogo = Setting::get('app_logo');
+            if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
+                Storage::disk('public')->delete($oldLogo);
+            }
             $logoPath = $request->file('app_logo')->store('settings', 'public');
             Setting::set('app_logo', $logoPath, 'image', 'appearance');
         }

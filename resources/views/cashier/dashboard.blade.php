@@ -388,7 +388,8 @@
                                                 $waPhone = $cleanPhone;
                                             }
                                             $itemsList = $sale->items->map(fn($it) => "- {$it->quantity}x {$it->product_name_snapshot}")->implode("\n");
-                                            $waMsg = "Halo Kak {$sale->customer_name}, terima kasih telah memesan di Fira Cake Bakery & Pastry!\n\nPesanan Online Anda ({$sale->transaction_number}) senilai Rp " . number_format($sale->total_amount, 0, ',', '.') . " telah kami terima dan LUNAS via Payment Gateway.\n\nRincian Pesanan:\n{$itemsList}\n\nSaat ini pesanan sedang dipersiapkan fresh oleh dapur kami. Kami akan segera menginfokan kembali saat pesanan siap diantar / diambil. Terima kasih!";
+                                            $currentStoreName = $storeName ?? \App\Models\Setting::getStoreName();
+                                            $waMsg = "Halo Kak {$sale->customer_name}, terima kasih telah memesan di {$currentStoreName}!\n\nPesanan Online Anda ({$sale->transaction_number}) senilai Rp " . number_format($sale->total_amount, 0, ',', '.') . " telah kami terima dan LUNAS via Payment Gateway.\n\nRincian Pesanan:\n{$itemsList}\n\nSaat ini pesanan sedang dipersiapkan fresh oleh dapur kami. Kami akan segera menginfokan kembali saat pesanan siap diantar / diambil. Terima kasih!";
                                             $waHref = "https://api.whatsapp.com/send?phone={$waPhone}&text=" . urlencode($waMsg);
                                         @endphp
                                         <a href="{{ $waHref }}" target="_blank"
@@ -619,7 +620,7 @@
 
             <div class="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl text-[11px] text-emerald-950 space-y-1">
                 <span class="font-bold block text-emerald-900">Format Pesan Otomatis:</span>
-                <p class="italic">"Halo! Silakan klik link berikut untuk melihat menu dan memesan langsung di Fira Cake Bakery & Pastry: {{ url('/pesan-online') }} Terima kasih!"</p>
+                <p class="italic">"Halo! Silakan klik link berikut untuk melihat menu dan memesan langsung di {{ $storeName ?? \App\Models\Setting::getStoreName() }}: {{ url('/pesan-online') }} Terima kasih!"</p>
             </div>
         </div>
 
@@ -875,7 +876,8 @@
             phone = '62' + phone;
         }
 
-        const msg = `Halo! Silakan klik link berikut untuk melihat menu dan memesan langsung di Fira Cake Bakery & Pastry:\n\n${onlineOrderUrl}\n\nPembayaran dapat dilakukan langsung via QRIS/Payment Gateway. Terima kasih!`;
+        const storeName = @json($storeName ?? \App\Models\Setting::getStoreName());
+        const msg = `Halo! Silakan klik link berikut untuk melihat menu dan memesan langsung di ${storeName}:\n\n${onlineOrderUrl}\n\nPembayaran dapat dilakukan langsung via QRIS/Payment Gateway. Terima kasih!`;
         const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
         window.open(waUrl, '_blank');
         closeShareOnlineModal();

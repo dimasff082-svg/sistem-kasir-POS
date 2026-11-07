@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Status Pesanan #{{ $sale->transaction_number }} - Fira Cake</title>
+    <title>Status Pesanan #{{ $sale->transaction_number }} - {{ $storeName ?? \App\Models\Setting::getStoreName() }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,9 +27,9 @@
         <!-- Top Header -->
         <header class="bg-white border-b border-[#eee7dc] px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <img src="{{ asset('images/logo.png') }}" alt="Fira Cake" class="w-9 h-9 rounded-xl object-contain shadow-2xs border border-[#eee7dc] p-0.5 bg-[#fdfbf7]">
+                <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-9 h-9 rounded-xl object-contain shadow-2xs border border-[#eee7dc] p-0.5 bg-[#fdfbf7]">
                 <div>
-                    <h1 class="text-sm font-black text-[#26211a] leading-tight">Fira Cake</h1>
+                    <h1 class="text-sm font-black text-[#26211a] leading-tight">{{ $storeName ?? \App\Models\Setting::getStoreName() }}</h1>
                     <p class="text-[10px] text-[#786e60]">Struk & Status Pesanan Online</p>
                 </div>
             </div>
@@ -81,7 +81,7 @@
                         </span>
                         <h2 class="font-serif-classic text-xl font-bold text-emerald-950">Pesanan Online Diterima!</h2>
                         <p class="text-xs text-emerald-900/80 leading-relaxed mt-1">
-                            Terima kasih, <strong>{{ $sale->customer_name }}</strong>! Pesanan Anda telah lunas via Midtrans Payment Gateway dan langsung diteruskan ke kasir & dapur Fira Cake.
+                            Terima kasih, <strong>{{ $sale->customer_name }}</strong>! Pesanan Anda telah lunas via Midtrans Payment Gateway dan langsung diteruskan ke kasir & dapur {{ $storeName ?? \App\Models\Setting::getStoreName() }}.
                         </p>
                     </div>
                 </div>
@@ -233,7 +233,8 @@
                 } else {
                     $storeWa = $cleanStorePhone;
                 }
-                $waMessage = urlencode("Halo Fira Cake, saya ingin menanyakan status pesanan Online saya #{$sale->transaction_number} atas nama {$sale->customer_name}.");
+                $currentStoreName = $storeName ?? \App\Models\Setting::getStoreName();
+                $waMessage = urlencode("Halo {$currentStoreName}, saya ingin menanyakan status pesanan Online saya #{$sale->transaction_number} atas nama {$sale->customer_name}.");
                 $waStoreUrl = "https://api.whatsapp.com/send?phone={$storeWa}&text={$waMessage}";
             @endphp
             <div class="space-y-2 pt-2">

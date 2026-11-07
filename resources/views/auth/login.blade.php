@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk - Point of Sale (Modern Classic)</title>
+    <title>Masuk - {{ $storeName ?? \App\Models\Setting::getStoreName() }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,15 +16,14 @@
 </head>
 <body class="h-full flex items-center justify-center p-6 bg-[#161412] text-[#f2ece1]">
     <div class="w-full max-w-md">
-        <!-- Brand Header: Fira Cake Official Logo -->
+        <!-- Brand Header: Logo & Store Name -->
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center mb-3">
-                <img src="{{ asset('images/logo.png') }}" alt="Fira Cake" class="w-24 h-24 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+                <img src="{{ $storeLogo ?? \App\Models\Setting::getLogoUrl() }}" alt="{{ $storeName ?? \App\Models\Setting::getStoreName() }}" class="w-24 h-24 object-contain rounded-2xl drop-shadow-2xl hover:scale-105 transition-transform duration-300 bg-[#25221c] p-1 border border-[#3b3428]">
             </div>
-            <h1 class="text-2xl font-serif-classic font-bold tracking-tight text-[#f5ebd7]">FIRA CAKE</h1>
-            <p class="text-sm uppercase font-cinzel tracking-[0.25em] text-white font-semibold mt-1">BAKERY & PASTRY</p>
+            <h1 class="text-2xl font-serif-classic font-bold tracking-tight text-[#f5ebd7]">{{ strtoupper($storeName ?? \App\Models\Setting::getStoreName()) }}</h1>
+            <p class="text-xs uppercase font-cinzel tracking-[0.25em] text-[#c59b27] mt-1">{{ $storeHours ?? \App\Models\Setting::getStoreHours() }}</p>
             <p class="text-xs uppercase font-cinzel tracking-[0.25em] text-[#c59b27] mt-1">Point Of Sales Terintegrasi</p>
-            <p class="text-xs uppercase font-cinzel tracking-[0.25em] text-[#c59b27] mt-1">V 1.2 LJ</p>
         </div>
 
         <!-- Login Card -->
